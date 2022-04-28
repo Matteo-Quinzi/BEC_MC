@@ -387,12 +387,12 @@ module bec_vmc
                 E_loc = 0.d0 
                 do i = 1, N_at
                    !THIS IS WITH NUMERIC LAPLACIAN
-                   !E_loc = E_loc - 0.5d0*lap_single_atom(a, b0, b1, N_at, coords, i) +&
-                   !        V_ext(coords(i,:))/N_at
+                   E_loc = E_loc - 0.5d0*lap_single_atom(a, b0, b1, N_at, coords, i) +&
+                           V_ext(coords(i,:))/N_at
 
                    !THIS IS WITH ANALITYC LAPLACIAN
-                   E_loc = E_loc - 0.5d0 * lap_psi_over_psi(a, b0, b1, N_at, coords, i) +&
-                           V_ext(coords(i,:))/N_at
+                   !E_loc = E_loc - 0.5d0 * lap_psi_over_psi(a, b0, b1, N_at, coords, i) +&
+                   !        V_ext(coords(i,:))/N_at
                 end do
 
         end function local_energy
