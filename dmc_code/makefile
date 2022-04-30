@@ -7,8 +7,8 @@ OPTIMIZATION=-Ofast
 #trial: bec_dmc.o trial.f90
 #	$(COMPILER) -Ofast bec_dmc.o trial.f90 -o a.out
 DMC: bec_dmc.o bec_vmc.o DMC.f90 
-	$(COMPILER) bec_dmc.o bec_vmc.o DMC.f90 -o DMC.x
+	$(COMPILER) -check all bec_dmc.o bec_vmc.o DMC.f90 -o DMC.x
 bec_vmc.o: bec_vmc.f90 
-	$(COMPILER) $(OPTIMIZATION) -c bec_vmc.f90	
+	$(COMPILER) $(OPTIMIZATION) -c check all bec_vmc.f90	
 bec_dmc.o: bec_dmc.f90 
-	$(COMPILER) $(OPTIMIZATION) -c bec_dmc.f90
+	$(COMPILER) $(OPTIMIZATION) -c check all bec_dmc.f90
