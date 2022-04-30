@@ -2,6 +2,7 @@ program DMC_BEC
       ! use ulimit -s unlimited in the bash to avoid segmentation faults
       use mpi 
       use bec_dmc
+      use bec_vmc
       implicit none
 
       !mpi_variables
@@ -15,7 +16,8 @@ program DMC_BEC
 
       print *, 'Total number of procs ',nprocs
       print *, 'My rank ',my_rank
-
+      
+      call mpi_finalize(ierr)
 
 
 end program DMC_BEC
