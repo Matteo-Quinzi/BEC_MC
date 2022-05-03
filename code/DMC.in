@@ -1,7 +1,7 @@
 #Number of atoms and walkers and maximum number of walkers
 N_at    = 128
-N_walk  = 63 
-N_max   = 63
+N_walk  = 40
+N_max   = 2000
 
 #Number of eq.steps / samplings / delta_t between samplings / timestep
 eq_it   = 1000
