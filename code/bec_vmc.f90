@@ -505,6 +505,55 @@ module bec_vmc
 
         end subroutine metropolis 
 
+!--------------------------------------------------------------------------------------------------------------------
+
+        subroutine no_energy_metropolis(a, b0, b1, N_at, N_walk, M, coords, acc_ratio)
+                !This is a Metropolis that doeasn't evaluate the local energy
+                ! It is used to build up the initial configuration for the DMC run
+                ! The initial wavefunction is sampled by evolving the coordinates
+                real(kind=8), intent(in) :: a, b0, b1
+                integer(kind=8), intent(in) :: N_at, N_walk, M 
+                real(kind=8), intent(inout) :: coords(N_walk,N_at,3)
+                integer(kind=8) :: rd_which(M,N_walk)    !Tells at step M, for walker N which atom is trying to move
+                real(kind=8) :: rd_where(M,N_walk,3)     !Gives random coordinates of the displacement
+                real(kind=8) :: rd_acc(M,N_walk)
+                real(kind=8) :: d                        !half displacement range
+                real(kind=8) :: acc_prob(M,N_walk)
+                integer(kind=8) :: acc_moves(N_walk)
+                real(kind=8) :: acc_ratio
+                integer(kind=8) :: i,j
+
+                acc_moves= 0
+                d = 1.0d0 
+
+                call int_random_number(M, N_walk, N_at, rd_which)
+                call random_number(rd_where)
+                rd_where = d * (2.d0*rd_where - 1.d0) 
+                call random_number(rd_acc)
+
+                ! Metropolis run of N_walk walkers
+
+                do i = 1, M
+                ! At every step the trial move is evaluated for every walker
+                    acc_prob(i,:) = (/ (acceptance_prob(N_at, rd_which(i,j), a, b0, b1, coords(j,:,:),&
+                                     coords(j, rd_which(i,j),:) + rd_where(i,j,:)), j=1,N_walk) /)
+                    do j = 1, N_walk
+                        if (acc_prob(i,j) > rd_acc(i,j)) then
+                                coords(j,rd_which(i,j),:) =  coords(j,rd_which(i,j),:) + rd_where(i,j,:)
+                                acc_moves(j) = acc_moves(j) + 1
+                        end if
+                    end do
+                 
+                end do 
+
+                acc_ratio = 0.
+                do i = 1, N_walk
+                    acc_ratio = acc_ratio + acc_moves(i)
+                end do
+
+                acc_ratio = acc_ratio/(M*N_walk)
+
+        end subroutine no_energy_metropolis 
 !---------------------------------------------------------------------------------------------------------------------
 
         function err_energy(M, energies, mean_energy)

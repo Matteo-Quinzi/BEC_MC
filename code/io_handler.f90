@@ -77,10 +77,13 @@
 !-------------------------------------------------------------------------------------------------------------------
 
       subroutine read_data_dmc(N_at, N_walk, N_max, eq_it, samples, &
-                               dt_sam, dt)
+                               dt_sam, dt, a, b0, b1, &
+                               coords_input_file)
           integer(kind=8) :: N_at, N_walk, N_max
           integer(kind=8) :: eq_it, samples, dt_sam
           real(kind=8) :: dt
+          real(kind=8) :: a, b0, b1
+          character(len=50) :: coords_input_file
 
           open(unit=io_unit, file=input_file, action='Read')
               !Reading Atoms and walkers
@@ -96,6 +99,19 @@
               read(io_unit,'(10x,i10)') samples
               read(io_unit,'(10x,i10)') dt_sam
               read(io_unit,'(10x,f15.10)') dt
+              read(io_unit,*)
+
+              !Reading info about the guiding function
+              read(io_unit,*)
+              read(io_unit,'(10x,f15.10)') a
+              read(io_unit,'(10x,f15.10)') b0 
+              read(io_unit,'(10x,f15.10)') b1
+              read(io_unit,*)
+
+              !Reading coords input file
+              read(io_unit,*)
+              read(io_unit,'(10x,a50)') coords_input_file
+              read(io_unit,*)
 
           close(io_unit)
       end subroutine read_data_dmc
