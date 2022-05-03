@@ -43,7 +43,7 @@ program DMC_BEC
       call mpi_comm_rank(mpi_comm_world, my_rank, ierr)
 
       !INITIALIZING RNG
-      call init_rng(my_rank)
+      call fix_rng(my_rank)
 
       !PRINTING DATE AND TIME
       if (my_rank .eq. 0) then

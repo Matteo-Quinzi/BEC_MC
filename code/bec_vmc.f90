@@ -37,6 +37,24 @@ module bec_vmc
 
        end subroutine
 
+! -------------------------------------------------------------------------------------------------
+
+       subroutine fix_rng(my_rank)
+               !Initialize the rng to avoid having same random numbers
+               !for all procs and for all runs
+               ! THIS FIXES THE RNG FOR THE IFORT COMPILER ONLY
+               ! NOT PORTABLE
+               integer, intent(in) :: my_rank
+               integer :: seed_size, time_int, i
+               integer :: seed_array(2)
+               
+               seed_array(1) = 2147483562
+               seed_array(2) = 2147483398
+               !Put in the fixed seed
+               call random_seed(put=seed_array)
+
+       end subroutine fix_rng
+
 ! --------------------------------------------------------------------------------------------------
        function set_up_boson_gas(N_at, a, l) result(coords)
                ! This create a configuration of N_at bosons
@@ -175,28 +193,16 @@ module bec_vmc
 
 !-----------------------------------------------------------------------------------------------------------------
 
-       function first_der_g(b0, b1, r, idx)
+       function first_derg_over_g(b0, b1, r_idx, r2)
                real(kind=8), intent(in) :: b0, b1
-               real(kind=8), intent(in) :: r(3)
-               integer(kind=8), intent(in) :: idx ! specify if the derivative is made wrt x, y or z
-               real(kind=8) :: first_der_g
-               first_der_g = -2.d0 * r(idx) * b0 * &
-                       exp(-b0 * (r(1)*r(1) + r(2)*r(2) + r(3)*r(3))) 
+               real(kind=8), intent(in) :: r_idx
+               real(kind=8), intent(in) :: r2
+               real(kind=8) :: first_der_g_over_g
+               derg_over_g = -2.d0*r_idx * (b0 - 2.d0*b1*r2)                  
        end function first_der_g
 
 !------------------------------------------------------------------------------------------------------------------
-
-       function second_der_g(b0, b1, r, idx)
-               real(kind=8), intent(in) :: b0, b1
-               real(kind=8), intent(in) :: r(3)
-               integer(kind=8), intent(in) :: idx ! specify if the derivative is made wrt x, y or z
-               real(kind=8) :: second_der_g
-               second_der_g = 2.d0 * b0 * (2.d0 * r(idx)*r(idx) * b0 - 1.d0) *&
-                        exp(-b0 * (r(1)*r(1) + r(2)*r(2) + r(3)*r(3)))
-       end function second_der_g
-
-!-------------------------------------------------------------------------------------------------------------------
-       
+      
        function f(a, ri, rj)
                real(kind=8), intent(in) :: a
                real(kind=8), intent(in) :: ri(3), rj(3)
@@ -234,26 +240,6 @@ module bec_vmc
         end function first_der_f
 
 !--------------------------------------------------------------------------------------------------------------------
-               
-        function second_der_f(a, ri, rj, idx)
-                !derivative of f wrt ri
-                real(kind=8), intent(in) :: a
-                real(kind=8), intent(in) :: ri(3), rj(3)
-                integer(kind=8), intent(in) :: idx !derivative is made wrt ri-x, j or z
-                real(kind=8) :: rij
-                real(kind=8) :: second_der_f
-
-                rij = sqrt((ri(1) - rj(1))**2.d0 + &
-                            (ri(2) - rj(2))**2.d0 + &
-                            (ri(3) - rj(3))**2.d0) 
-                if (rij <= a) then 
-                        second_der_f = 0.d0
-                else
-                        second_der_f = a / (rij ** 3.0d0 ) * ( 1.d0 - 3.d0 * (ri(idx) - rj(idx))**2.d0 / rij**2.d0)
-                end if
-        end function second_der_f
-
-!------------------------------------------------------------------------------------------------------------------
 
         function V_ext(r)
                real(kind=8), intent(in) :: r(3)
@@ -263,70 +249,6 @@ module bec_vmc
         end function
 
 !------------------------------------------------------------------------------------------------------------------
-
-        function lap_psi_over_psi(a, b0, b1, N_at, coords, which) result (nabla)
-                ! returns the laplacian of wfc over the wfc itself
-                ! this one is evaluated analytically ( so I hope it'll be
-                ! more stable wrt the numerical one )
-                ! IMPORTANT : This is evaluated just for one atom !!!
-                real(kind=8), intent(in) :: a, b0, b1
-                integer(kind=8), intent(in) :: N_at 
-                real(kind=8), intent(in) :: coords(N_at, 3)
-                integer(kind=8), intent(in) :: which !gives which atom are we considering
-                real(kind=8) :: nabla
-                integer(kind=8) :: i,j
-                real(kind=8) :: disp(3,3)
-                real(kind=8) :: g_still, g_der(3), g_der2(3)   !derivatives must be evaluated at x,y,z
-                real(kind=8), dimension(N_at) :: f_still
-                real(kind=8), dimension(N_at,3) :: f_der, f_der2
-                real(kind=8), dimension(N_at,3) :: f_der_over_f, f_der2_over_f
-                real(kind=8) :: multiplicative_term, partial_sum
-
-                g_still = g(b0, b1, coords(which,:))       !g of the wfc
-                g_der(:) = (/( first_der_g(b0, b1, coords(which,:), i) , i=1,3 )/) 
-                g_der2(:) = (/( second_der_g(b0, b1, coords(which,:), i), i=1,3 )/)
-
-                f_still(:) = (/( f(a, coords(which,:), coords(j,:)), j=1,N_at )/)
-                f_still(which) = 1.d0    ! I want f_der/f_still = 0
-
-                do i=1,3
-
-                    f_der(:,i) = (/( first_der_f(a, coords(which,:), coords(j,:), i), j=1,N_at ) /)
-                    f_der(which,i) = 0.d0
-                    f_der_over_f(:,i) = (/(f_der(j,i)/f_still(j), j=1,N_at)/)
-
-                    f_der2(:,i) =  (/( second_der_f(a, coords(which,:), coords(j,:), i), j=1,N_at ) /)
-                    f_der2(which,i) = 0.d0
-                    f_der2_over_f(:,i) = (/( f_der2(j,i)/ f_still(j), j=1,N_at )/)
-
-                end do
-
-                nabla = 0.0d0
-
-                do i =1,3
-                    ! summing the terms on the diagonal
-                    ! notice that f_der/f_still = 0 so it doeasn't contibute to the sum
-                    nabla = nabla + (g_der2(i)/g_still) / N_at &
-                           + sum(f_der2_over_f(:,i))/N_at 
-
-                    !summing the terms on the upper triangle
-                    partial_sum = sum(f_der_over_f(:,i))
-
-                    multiplicative_term = (g_der(i)/g_still) 
-                    nabla = nabla + 2.d0 * multiplicative_term * partial_sum/N_at
-
-                    do j = 1, (N_at-1)
-                        multiplicative_term = f_der_over_f(j,i)
-                        partial_sum = partial_sum - multiplicative_term
-                        nabla = nabla + 2.d0 * multiplicative_term * partial_sum/N_at
-                    end do
-
-                end do
-
-        end function lap_psi_over_psi
-
-!-------------------------------------------------------------------------------------------------------------------
-
         function lap_single_atom(a, b0, b1, N_at, coords, which) result (nabla)
                 ! This evaluates the laplacian associated to the atom 'which'
                 ! The laplacian is then normalized with the wavefunction, otherwise

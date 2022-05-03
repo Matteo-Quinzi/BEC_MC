@@ -1,5 +1,6 @@
 module bec_dmc
         !
+        use bec_vmc
         implicit none 
         real(kind=8) :: pi=acos(-1.d0)
         !
@@ -42,6 +43,36 @@ module bec_dmc
                 
         end function gaussian_rng
 !-----------------------------------------------------------------------------------------------------------------------------------
-        
+
+        function driving_force(a, b0, b1, N_at, coords) result (F)
+                ! This is actually half of the driving force
+                real(kind=8), intent(in)  :: a, b0, b1
+                integer(kind=8), intent(in) :: N_at
+                real(kind=8), intent(in)  :: coords(N_at,3)
+                real(kind=8) :: F(N_at,3)
+                real(kind=8) :: r(3)
+                real(kind=8) :: r2
+                integer :: i,j,k
+
+                !Building up 
+                do i = 1,N_at
+                    do j = i, N_at
+                        
+                    end do 
+                end do
+                do i = 1, N_at
+                    r = coords(i,:)
+                    r2 = r(1)*r(1) + r(2)*r(2) + r(3)*r(3)
+                    do j = 1,3
+                        F(i) = der_g_over_g(b0, b1, r(i), r2)
+                        do j = 1,N_at
+                        F(j) = F(i) + first_der_f / f
+                    end do
+                end do
+
+
+        end function driving_force
+
+
 !-----------------------------------------------------------------------------------------------------------------------------------
 end module bec_dmc
