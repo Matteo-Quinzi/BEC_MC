@@ -197,9 +197,9 @@ module bec_vmc
                real(kind=8), intent(in) :: b0, b1
                real(kind=8), intent(in) :: r_idx
                real(kind=8), intent(in) :: r2
-               real(kind=8) :: first_der_g_over_g
-               derg_over_g = -2.d0*r_idx * (b0 - 2.d0*b1*r2)                  
-       end function first_der_g
+               real(kind=8) :: first_derg_over_g
+               first_derg_over_g = -2.d0*r_idx * (b0 - 2.d0*b1*r2)                  
+       end function first_derg_over_g
 
 !------------------------------------------------------------------------------------------------------------------
       
@@ -217,6 +217,18 @@ module bec_vmc
                        f = 1.d0 - a/rij
                end if
         end function f
+
+!------------------------------------------------------------------------------------------------------------------
+
+        function fast_f(a, rij)
+                !You need to check outside if the hard sphere condition is reached
+                real(kind=8), intent(in) :: a
+                real(kind=8), intent(in) :: rij
+                real(kind=8) :: fast_f
+
+                fast_f = 1.d0 - a/rij
+
+        end function fast_f
 
 !-------------------------------------------------------------------------------------------------------------------
 
@@ -238,6 +250,18 @@ module bec_vmc
                 end if
         
         end function first_der_f
+
+!-------------------------------------------------------------------------------------------------------------------
+
+        function fast_first_der_f(a,xij,rij)
+                ! You need to check outside if the hard sphere condition is reached
+                real(kind=8), intent(in) :: a
+                real(kind=8), intent(in) :: xij, rij
+                real(kind=8) :: fast_first_der_f
+
+                fast_first_der_f = a * xij / (rij**3.d0)
+
+        end function fast_first_der_f
 
 !--------------------------------------------------------------------------------------------------------------------
 

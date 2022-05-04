@@ -29,6 +29,7 @@ program DMC_BEC
       real(kind=8), allocatable :: temp_coords(:,:)
       integer(kind=8) :: metro_step
       real(kind=8), allocatable :: my_acc_prob, temp_prob !acceptance probability for VMC in initial condition
+      real(kind=8),allocatable :: my_F(:,:)
 
       !Loop indexes
       integer(kind=8) :: i
@@ -153,7 +154,14 @@ program DMC_BEC
           write(*,*) 'CPU time : ', toc - tic
           write(*,*) 'Typical acceptance ratio : ', sum(acc_prob)/nprocs
           write(*,*)
-      end if 
+      end if
+
+      !TEST EVALUATING DRIVING FORCE
+      allocate(my_F(N_at,3))
+      tic = mpi_wtime()
+      my_F = driving_force(a, b0, b1, N_at, my_configurations(1,:,:))
+      toc = mpi_wtime()
+      print *,'F_time 1 walker : ', toc-tic  
       
       !DEALLOCATING BEFORE EXITING 
       deallocate(my_configurations)
