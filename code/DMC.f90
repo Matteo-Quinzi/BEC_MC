@@ -33,10 +33,12 @@ program DMC_BEC
       real(kind=8),allocatable :: my_F(:,:,:) !Driving force for a given walker
       integer(kind=8) :: it
       integer(kind=8), allocatable :: my_Nt(:)
-      real(kind=8), allocatable :: my_walk_en(:,:) !Local energy of each walker at a given iteration
+      real(kind=8), allocatable :: my_walk_en(:) !Local energy of each walker at a given iteration
       real(kind=8), allocatable :: my_en(:) !Average local energy at each iteration
       logical :: eq_accepted
       real(kind=8) :: eq_acc_ratio
+      real(kind=8) :: alpha
+      real(kind=8) :: Er_start, N_ratio
 
       !Loop indexes
       integer(kind=8) :: i
@@ -100,6 +102,7 @@ program DMC_BEC
       call mpi_bcast(samples, 1, mpi_integer8, 0, mpi_comm_world, ierr)
       call mpi_bcast(dt_sam, 1, mpi_integer8, 0, mpi_comm_world, ierr)
       call mpi_bcast(dt, 1, mpi_real8, 0, mpi_comm_world, ierr)
+      call mpi_bcast(Er, 1, mpi_real8, 0, mpi_comm_world, ierr)
       call mpi_bcast(a, 1, mpi_real8, 0, mpi_comm_world, ierr)
       call mpi_bcast(b0, 1, mpi_real8, 0, mpi_comm_world, ierr)
       call mpi_bcast(b1, 1, mpi_real8, 0, mpi_comm_world, ierr)
@@ -161,6 +164,7 @@ program DMC_BEC
           write(*,*) 'Initial Distribution setted '
           write(*,*) 'CPU time : ', toc - tic
           write(*,*) 'Typical acceptance ratio : ', sum(acc_prob)/nprocs
+          write(*,*) 
           write(*,*)
       end if
 
@@ -172,32 +176,52 @@ program DMC_BEC
       !Moreover I want to able to do collective mpi calls here to
       ! adjust the trial energy value
       
-      allocate(my_Nt(eq_it), my_walk_en(eq_it,my_max), my_en(eq_it))
+      allocate(my_Nt(eq_it), my_walk_en(my_max), my_en(eq_it))
       allocate(my_F(my_max,N_at,3))
       my_Nt(1) = my_walk
 
-      !Evaluating initial driving forces
+      !Evaluating initial driving forces and local energy
       do i = 1, my_walk
          my_F(i,:,:) = driving_force(a, b0, b1, N_at, my_configurations(i, :, :))
+         my_walk_en(i) = local_energy(a, b0, b1, N_at, my_configurations(i,:,:))
       end do
+
       eq_acc_ratio = 0.d0
       
+      Er_start = Er
       !Looping over iterations
       do it = 1, eq_it
-      print *, it
                    
           !Looping over (alive) walkers
           do i = 1, my_walk
 
                 !Each walker diffuse with accept/reject step
-                call one_walker_diffusion(a, b0, b1, N_at, dt, my_configurations(i, :, :), my_F(i, :, :), eq_accepted)
+                call one_walker_diffusion(a, b0, b1, N_at, dt, my_configurations(i, :, :), my_F(i, :, :), my_walk_en(i), eq_accepted)
                 if (eq_accepted .eq. .True.) eq_acc_ratio = eq_acc_ratio + 1.d0/(my_walk*eq_it)
-
-                !Evaluate the local energy
-
-                !Branching  
+  
           end do
+
+          !Branching walkers
+          call branching(my_walk, my_max, N_at, my_configurations, my_walk_en, my_F, my_flag, dt, Er)
+
+          !Determining avg energy and num of walkers after the branching step
+          my_Nt(it) = my_walk
+          my_en(it) = sum(my_walk_en(1:my_walk)) / my_walk
+
+          !Adjusting the energy scale
+          N_ratio = (my_Nt(1)*1.d0)/(my_Nt(it)*1.d0)
+          alpha = 1.d0 / (N_at * dt)
+          if (mod(it,N_at) .eq. 0) then
+              Er = my_en(it) + alpha*log(N_ratio)
+          else
+              Er = Er + alpha*log(N_ratio)
+          end if
+          print *, it, my_Nt(it), my_en(it), Er
+
       end do
+
+      call save_rank_dmc(my_rank, eq_it, my_Nt, my_en)
+
       toc = mpi_wtime()
       deallocate(my_Nt, my_walk_en, my_en)
       deallocate(my_F)

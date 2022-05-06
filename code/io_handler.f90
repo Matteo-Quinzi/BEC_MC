@@ -176,6 +176,30 @@
 
 !---------------------------------------------------------------------------------------------------------------------
 
+      subroutine save_rank_dmc(my_rank, it, Nt, ene)
+              integer, intent(in) :: my_rank 
+              integer(kind=8), intent(in) :: it
+              integer(kind=8), intent(in) :: Nt(it)
+              real(kind=8), intent(in) :: ene(it)
+              integer(kind=8) :: i
+              integer :: io_unit=10
+              character(len=25) :: my_file
+
+              !out_unit = 5 + my_rank
+
+         write(my_file, '(a6,i1,a4)') 'my_equilibration_',my_rank,'.txt'
+         open(unit = io_unit, file=my_file, action='write')
+         write(io_unit, *) 'Step       Num walks        Ene'
+                  do i = 1, it
+                       write(io_unit,'(i10,4x,i10,4x,f15.10)') &
+                       i,Nt(i),ene(i)
+                  end do
+              close(io_unit)
+
+      end subroutine save_rank_dmc 
+
+!---------------------------------------------------------------------------------------------------------------------
+
       subroutine save_output(N_cyc, energies, err_energies, acc_ratios)
               ! save the output on the given output file
               integer(kind=8), intent(in) :: N_cyc
