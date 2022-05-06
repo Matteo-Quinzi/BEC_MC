@@ -77,11 +77,11 @@
 !-------------------------------------------------------------------------------------------------------------------
 
       subroutine read_data_dmc(N_at, N_walk, N_max, eq_it, samples, &
-                               dt_sam, dt, a, b0, b1, &
+                               dt_sam, dt, Er, a, b0, b1, &
                                coords_input_file)
           integer(kind=8) :: N_at, N_walk, N_max
           integer(kind=8) :: eq_it, samples, dt_sam
-          real(kind=8) :: dt
+          real(kind=8) :: dt, Er
           real(kind=8) :: a, b0, b1
           character(len=50) :: coords_input_file
 
@@ -99,6 +99,7 @@
               read(io_unit,'(10x,i10)') samples
               read(io_unit,'(10x,i10)') dt_sam
               read(io_unit,'(10x,f15.10)') dt
+              read(io_unit,'(10x,f15.10)') Er
               read(io_unit,*)
 
               !Reading info about the guiding function

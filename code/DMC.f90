@@ -18,6 +18,7 @@ program DMC_BEC
       integer(kind=8) :: N_at, N_walk, N_max     !N_atoms, walkers and maximum number of walkers
       integer(kind=8) :: eq_it, samples, dt_sam  !N of iterations fir equilibration, samples and delta_time between samples
       real(kind=8)    :: dt                      !timestep width
+      real(kind=8)    :: Er                      !Trial energy
       real(kind=8)    :: a, b0, b1 !Scattering length and params of the guiding function
       character(len=50) :: coords_input_file
       real(kind=8), allocatable :: acc_prob(:)   !Overall acc prob for VMC set up
@@ -29,7 +30,13 @@ program DMC_BEC
       real(kind=8), allocatable :: temp_coords(:,:)
       integer(kind=8) :: metro_step
       real(kind=8), allocatable :: my_acc_prob, temp_prob !acceptance probability for VMC in initial condition
-      real(kind=8),allocatable :: my_F(:,:)
+      real(kind=8),allocatable :: my_F(:,:,:) !Driving force for a given walker
+      integer(kind=8) :: it
+      integer(kind=8), allocatable :: my_Nt(:)
+      real(kind=8), allocatable :: my_walk_en(:,:) !Local energy of each walker at a given iteration
+      real(kind=8), allocatable :: my_en(:) !Average local energy at each iteration
+      logical :: eq_accepted
+      real(kind=8) :: eq_acc_ratio
 
       !Loop indexes
       integer(kind=8) :: i
@@ -63,7 +70,7 @@ program DMC_BEC
       if (my_rank .eq. 0) then
              call read_input_file()
              call read_data_dmc(N_at, N_walk, N_max, eq_it, samples, &
-                     dt_sam, dt, a, b0, b1, coords_input_file)
+                     dt_sam, dt, Er, a, b0, b1, coords_input_file)
              !Sanity check
                  if (N_walk > N_max) then
                      write(*,*) 'ERROR : N_walk can not be greater than N_max !!!'
@@ -78,6 +85,7 @@ program DMC_BEC
              write(*,'(a27,4x,i10)')    'Number of samples        : ', samples
              write(*,'(a27,4x,i10)')    'Steps between two samples: ', dt_sam
              write(*,'(a27,4x,f15.10)') 'Timestep                 : ', dt
+             write(*,'(a27,4x,f15.10)') 'Energy scale             : ', Er  
              write(*,'(a27,4x,f15.10)') 'Scattering length        : ', a
              write(*,'(a27,4x,f15.10)') 'Guiding func. param b0   : ', b0
              write(*,'(a27,4x,f15.10)') 'Guiding func. param b1   : ', b1
@@ -156,13 +164,49 @@ program DMC_BEC
           write(*,*)
       end if
 
-      !TEST EVALUATING DRIVING FORCE
-      allocate(my_F(N_at,3))
       tic = mpi_wtime()
-      my_F = driving_force(a, b0, b1, N_at, my_configurations(1,:,:))
-      toc = mpi_wtime()
-      print *,'F_time 1 walker : ', toc-tic  
+      !EQUILIBRATION
+      !I want to keep all major loops within the main program
+      ! so that I can play a little bit with openMP later to see
+      ! if a better performance is achieved
+      !Moreover I want to able to do collective mpi calls here to
+      ! adjust the trial energy value
       
+      allocate(my_Nt(eq_it), my_walk_en(eq_it,my_max), my_en(eq_it))
+      allocate(my_F(my_max,N_at,3))
+      my_Nt(1) = my_walk
+
+      !Evaluating initial driving forces
+      do i = 1, my_walk
+         my_F(i,:,:) = driving_force(a, b0, b1, N_at, my_configurations(i, :, :))
+      end do
+      eq_acc_ratio = 0.d0
+      
+      !Looping over iterations
+      do it = 1, eq_it
+      print *, it
+                   
+          !Looping over (alive) walkers
+          do i = 1, my_walk
+
+                !Each walker diffuse with accept/reject step
+                call one_walker_diffusion(a, b0, b1, N_at, dt, my_configurations(i, :, :), my_F(i, :, :), eq_accepted)
+                if (eq_accepted .eq. .True.) eq_acc_ratio = eq_acc_ratio + 1.d0/(my_walk*eq_it)
+
+                !Evaluate the local energy
+
+                !Branching  
+          end do
+      end do
+      toc = mpi_wtime()
+      deallocate(my_Nt, my_walk_en, my_en)
+      deallocate(my_F)
+
+      !DIAGNOSTIC PRINTOUT AFTER EQUILIBRATION
+      print *, 'Eq Time ', toc-tic
+      print *, 'Eq Acceptance ratio', eq_acc_ratio
+
+
       !DEALLOCATING BEFORE EXITING 
       deallocate(my_configurations)
       deallocate(my_flag)

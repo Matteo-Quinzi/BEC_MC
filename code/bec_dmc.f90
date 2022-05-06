@@ -9,7 +9,7 @@ module bec_dmc
         function gaussian_rng(N_walk, N_at, N_dim) result (grn_matrix)
                 ! Returns an array of gaussian random numbers obtained through 
                 ! Box-Muller transform
-                integer, intent(in) :: N_walk, N_at, N_dim
+                integer(kind=8), intent(in) :: N_walk, N_at, N_dim
                 real(kind=8) :: grn_matrix(N_walk, N_at, N_dim)
                 real(kind=8),allocatable :: temp_urn(:), temp_grn(:)
                 integer(kind=8) :: L,i
@@ -83,9 +83,115 @@ module bec_dmc
                     end do
                 end do
 
+                F = 2.d0 * F
 
         end function driving_force
 
+!----------------------------------------------------------------------------------------------------------------------------------
+
+        function dmc_acc_prob(a, b0, b1, N_at, coords, new_coords, F_driv, F_driv_new, dt) result (acc_prob)
+                !Evaluate the acceptance probability in the dmc accept/reject step
+                ! after all atoms have been displaced 
+                real(kind=8), intent(in) :: a, b0, b1
+                integer(kind=8), intent(in) :: N_at
+                real(kind=8), intent(in) :: coords(N_at, 3)
+                real(kind=8), intent(in) :: new_coords(N_at, 3)
+                real(kind=8), intent(in) :: F_driv(N_at,3)
+                real(kind=8), intent(in) :: F_driv_new(N_at,3)
+                real(kind=8), intent(in) :: dt
+                real(kind=8) :: acc_prob
+                real(kind=8) :: inverse_psi_ratio, psi_ratio
+                real(kind=8) :: fnew_over_fold(N_at)
+                real(kind=8) :: G_old_new_mat(N_at,3), G_new_old_mat(N_at,3)
+                real(kind=8) :: G_old_new, G_new_old
+                integer(kind=8) :: i, j
+
+                inverse_psi_ratio = 1.d0
+                do i = 1, N_at
+                    inverse_psi_ratio = inverse_psi_ratio * g(b0, b1, new_coords(i,:)) / g(b0, b1, coords(i,:))
+                    do j = 1,N_at
+                        if (j .eq. i) then
+                            fnew_over_fold(j) = 1.d0
+                        else
+                            fnew_over_fold(j) = f(a, new_coords(i,:), new_coords(j,:)) / f(a, coords(i,:), coords(j,:))
+                        end if
+                    inverse_psi_ratio = inverse_psi_ratio * fnew_over_fold(j)
+                    end do
+                end do 
+
+                ! This happens when two atoms compenetrate in the new position
+                if (inverse_psi_ratio .eq. 0.d0) then
+                        acc_prob = 0.d0
+                else
+                    ! If hard sphere condition is respected then go on with the other evaluation
+                    psi_ratio = inverse_psi_ratio ** (-2.d0)
+                    G_old_new_mat = new_coords - coords + 0.5d0 * F_driv * dt
+                    G_new_old_mat = coords - new_coords + 0.5d0 * F_driv_new * dt
+                    G_old_new = 0.d0
+                    G_new_old = 0.d0
+                    do i = 1,3
+                        G_old_new = G_old_new + dot_product(G_old_new_mat(:,i), G_old_new_mat(:,i))
+                        G_new_old = G_new_old + dot_product(G_new_old_mat(:,i), G_new_old_mat(:,i))
+                    end do
+                    acc_prob = (G_old_new - G_new_old) / (2.d0*dt)
+                    acc_prob =  exp(acc_prob)
+                    acc_prob = acc_prob * psi_ratio
+                end if
+
+
+        end function dmc_acc_prob
+
+!-----------------------------------------------------------------------------------------------------------------------------------
+
+        subroutine one_walker_diffusion(a, b0, b1, N_at, dt, coords, F, accepted)
+              !Subroutine that changes the coordinates according to the diffusion step
+              ! in the DMC algorithm. 
+              !The diffusion step takes place as 
+              !       R_new = R_old + 1/2 * F(R_old) * dt + e * (dt)**1/2
+              ! with F being the guiding force and e a gaussian random number with mean value 0
+              ! and variance 1.
+              !An accept/reject step is introduced (Ceperley-Alder implementation) to avoid drifts
+              ! due to the integration error O(3/2) in dt
+              !To optimize the calculation the driving force is evaluated outside and can be changed
+              real(kind=8), intent(in) :: a, b0, b1
+              integer(kind=8), intent(in) :: N_at
+              real(kind=8), intent(in) :: dt
+              real(kind=8), intent(inout) :: coords(N_at,3)
+              real(kind=8), intent(inout) :: F(N_at,3)
+              logical, intent(inout) :: accepted
+              real(kind=8) :: e(1,N_at,3)
+              real(kind=8) :: rand_acc
+              real(kind=8) :: F_new(N_at,3)
+              real(kind=8) :: new_coords(N_at,3)
+              real(kind=8) :: acc_prob
+              integer(kind=8) :: i,j
+
+              
+              !Extracting a sample of gaussian random numbers
+              e = gaussian_rng(1,N_at,3)
+
+              !Extracting a sample of N_at uniform random numbers
+              call random_number(rand_acc) ! these will be used in the accept/ reject step
+
+              !Diffusing all atoms
+              do i = 1, N_at
+                  new_coords(i,:) = (/ (coords(i,j) + 0.5d0 * F(i,j) * dt + e(1,i,j)*sqrt(dt), j=1,3) /)
+              end do
+
+              !I need to re-evaluate all driving forces to evaluate the acceptance prob
+              F_new = driving_force(a, b0, b1, N_at, new_coords)
+
+              !Evaluating acceptance prob
+              acc_prob = dmc_acc_prob(a, b0, b1, N_at, coords, new_coords, F, F_new, dt)
+              if (acc_prob .gt. rand_acc) then
+                      coords = new_coords
+                      F = F_new
+                      accepted = .True.
+              else 
+                      accepted = .False.
+              end if
+
+        end subroutine one_walker_diffusion
 
 !-----------------------------------------------------------------------------------------------------------------------------------
 end module bec_dmc
