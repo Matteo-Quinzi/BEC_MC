@@ -210,8 +210,8 @@ program DMC_BEC
 
           !Adjusting the energy scale
           N_ratio = (my_Nt(1)*1.d0)/(my_Nt(it)*1.d0)
-          alpha = 1.d0 / (N_at * dt)
-          if (mod(it,N_at) .eq. 0) then
+          alpha = N_at * my_Nt(1) / dt
+          if (mod(it,1) .eq. 0) then
               Er = my_en(it) + alpha*log(N_ratio)
           else
               Er = Er + alpha*log(N_ratio)

@@ -1,0 +1,11 @@
+COMPILER=ifort
+OPTIMIZATION=-Ofast
+
+DMC: bec_dmc.o bec_vmc.o io_handler.o DMC.f90
+	$(COMPILER) -qopenmp io_handler.o bec_dmc.o bec_vmc.o DMC_omp.f90 -o DMC_omp.x 
+io_handler.o: io_handler.f90
+	$(COMPILER) -c io_handler.f90
+bec_dmc.o: bec_dmc.f90 
+	$(COMPILER) -c bec_dmc.f90	
+bec_vmc.o: bec_vmc.f90 
+	$(COMPILER) -c bec_vmc.f90
