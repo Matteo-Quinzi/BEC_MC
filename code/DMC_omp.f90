@@ -7,6 +7,7 @@ program DMC_omp
       use io_handler
       use bec_vmc
       use bec_dmc
+      use omp_lib
       implicit none
 
       
@@ -26,15 +27,27 @@ program DMC_omp
       logical, allocatable :: flag(:)
 
       !Initial configuration variables
-      real(kind=8) :: acc_prob_vmc, temp_prob
+      real(kind=8) :: acc_prob_vmc
+      real(kind=8), allocatable :: temp_prob(:)
       real(kind=8), allocatable :: temp_coords(:,:)
       integer(kind=8) :: metro_step
+
+      !Equilibration variables
+      integer(kind=8), allocatable :: Nt(:)       !Number of walkers at each step
+      real(kind=8), allocatable :: walk_en(:), walk_en_old(:)     !Energy for each walker at a given step
+      real(kind=8), allocatable :: Et(:)          !Average energy at each step
+      real(kind=8), allocatable :: F_driv(:,:,:)  !Driving force for all walkers (N_max:N_at:3)
+      real(kind=8) :: acc_prob_eq                 !Acceptance probability in equilibration procedure
+      real(kind=8), allocatable :: temp_prob_eq(:)
+      logical :: eq_accepted
+      integer(kind=8) :: N_walk_start
+      real(kind=8) :: N_ratio, alpha
 
       !CPU time variables
       real(kind=8) :: tic, toc
 
       !Loops indexes
-      integer(kind=8) :: i
+      integer(kind=8) :: i, it
 
       !INITIALIZING RNG
       call fix_rng(0)
@@ -86,12 +99,13 @@ program DMC_omp
       temp_coords = set_up_from_file(N_at, coords_input_file)
 
 
-      call cpu_time(tic)
+      tic = omp_get_wtime()
       !CREATING INITIAL COORDINATES DISTRIBUTION WITH A VMC PROCEDURE
       metro_step = 1000*N_at
       acc_prob_vmc = 0.d0
+      allocate(temp_prob(N_walk))
 
-      !$OMP PARALLEL DO
+      !$OMP PARALLEL DO  
       do i = 1, N_walk
             flag(i) = .True.     !Walker is set to alive
             if (i .eq. 1) then 
@@ -100,15 +114,15 @@ program DMC_omp
                     configurations(i,:,:) = configurations(i-1,:,:)
             end if
             !Metropolis run is used to change coordinates
-            call no_energy_metropolis(a, b0, b1, N_at, 1, metro_step, configurations(i,:,:), temp_prob)
-            !acc_prob_vmc  = acc_prob_vmc + temp_prob/N_walk 
+            call no_energy_metropolis(a, b0, b1, N_at, 1, metro_step, configurations(i,:,:), temp_prob(i))
       end do
       !$OMP END PARALLEL DO
+      acc_prob_vmc = sum(temp_prob) / N_walk
 
       do i = N_walk + 1, N_max
                 flag(i) = .False.    !Walker is set to dead
       end do
-      call cpu_time(toc)
+      toc = omp_get_wtime()
       deallocate(temp_coords)
 
       !DIAGNOSTICS ABOUT INITIAL CONFIGURATION
@@ -120,6 +134,79 @@ program DMC_omp
       write(*,*)
       write(*,*)
 
+      !EQUILIBRATION
+      !All major loops are contained within the main program
+      !The most expensive subroutine is the diffusion one, which
+      ! evaluates both driving forces and local energies. It is this one
+      ! that I want to parallelize.
+      allocate(Nt(eq_it), Et(eq_it))
+      allocate(walk_en(N_max), walk_en_old(N_max))
+      allocate(F_driv(N_max,N_at,3))
+
+      !Evaluating initial driving forces and initial local energies
+      !$OMP PARALLEL DO
+      do i = 1, N_walk
+          F_driv(i,:,:) = driving_force(a, b0, b1, N_at, configurations(i, :, :))
+          walk_en(i)    = local_energy(a, b0, b1, N_at, configurations(i,:,:)) 
+      end do
+      !$OMP END PARALLEL DO
+
+      acc_prob_eq = 0.d0
+      allocate(temp_prob_eq(N_max))
+
+      !Saving initial number of walker
+      N_walk_start = N_walk
+
+      !Fixing population control parameter
+      !alpha = N_at * N_walk_start / dt
+      alpha = 1.0d0 / dt
+
+      tic = omp_get_wtime()
+      !Equilibration loop
+      do it = 1, eq_it
+
+          !Diffusing alive walkers
+          !$OMP PARALLEL DO reduction(+:acc_prob_eq)
+          do i = 1, N_walk
+              !Saving starting walker energy
+              walk_en_old(i) = walk_en(i)
+              !Each walker diffuse with accept/reject step
+              call one_walker_diffusion(a, b0, b1, N_at, dt, configurations(i, :, :), F_driv(i, :, :), walk_en(i), eq_accepted)
+              if (eq_accepted .eq. .True.) acc_prob_eq = acc_prob_eq + 1.d0/(N_walk*it)
+          end do
+          !$OMP END PARALLEL DO
+
+          !Branching
+          !N_walk, walk_en, F_driv are going to be updated with the number of replicas
+          call branching(N_walk, N_max, N_at, configurations, walk_en, walk_en_old, F_driv, flag, dt, Er)
+
+          !Saving number of walkers at step it 
+          Nt(it) = N_walk
+          !Evalauting average energy at step it
+          Et(it) = sum(walk_en(1:N_walk)) / N_walk
+
+          !Adjusting the energy scale
+          if ( mod(it,100) .eq. 0) then
+              N_ratio = (N_walk_start*1.d0) / (Nt(it)*1.d0)
+              Er = Et(it) + alpha * log(N_ratio)
+          end if
+
+          print *, Nt(it), Et(it)
+
+      end do
+      toc = omp_get_wtime()
+      print *, toc-tic
+
+      deallocate(temp_prob_eq)
+
+
+
+
+
+
+      deallocate(Nt, Et)
+      deallocate(walk_en, walk_en_old)
+      deallocate(F_driv)
 
 
       deallocate(configurations)

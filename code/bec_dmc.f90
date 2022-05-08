@@ -206,13 +206,14 @@ module bec_dmc
         end subroutine one_walker_diffusion
 !----------------------------------------------------------------------------------------------------------------------------------
 
-        subroutine branching(N_walk, N_max, N_at, configurations, walk_en, F_driv, flag, dt, Er)
+        subroutine branching(N_walk, N_max, N_at, configurations, walk_en, walk_en_old, F_driv, flag, dt, Er)
               !This subroutine evaluate the branching factor for each alive walker
               ! then add new replicas to the configurations array
               integer(kind=8), intent(inout) :: N_walk
               integer(kind=8), intent(in) :: N_max, N_at
               real(kind=8), intent(inout) :: configurations(N_max, N_at, 3)
               real(kind=8), intent(inout) :: walk_en(N_max)
+              real(kind=8), intent(in)    :: walk_en_old(N_max)
               real(kind=8), intent(inout) :: F_driv(N_max, N_at, 3)
               logical, intent(inout) :: flag(N_max)
               real(kind=8), intent(in) :: dt, Er
@@ -221,7 +222,7 @@ module bec_dmc
               integer(kind=8) :: i, N_walk_new
               logical, dimension(N_walk) :: j0
 
-
+              print *, 'Er', Er
               !At the beginning N_walk is the number of alive walkers
               N_walk_new = N_walk
 
@@ -229,7 +230,7 @@ module bec_dmc
               call random_number(rd_shift)
 
               !Evaluate the branching value taking the nearest integer
-              W(:) = (/ ( nint(exp( - dt * (walk_en(i) - Er)) + rd_shift) , i=1,N_walk ) /)
+              W(:) = (/ ( int(exp( - 0.5d0 * dt * ( walk_en(i) + walk_en_old(i) - 2.d0*Er) ) + rd_shift) , i=1,N_walk ) /)
 
               !I need to sign which walkers are dead and which ones are duplicating
               !I am allowing a single walker to generate up to 4 replicas
