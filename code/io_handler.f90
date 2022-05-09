@@ -78,12 +78,12 @@
 
       subroutine read_data_dmc(N_at, N_walk, N_max, eq_it, samples, &
                                dt_sam, dt, Er, a, b0, b1, &
-                               coords_input_file)
+                               coords_input_file, eq_out_file)
           integer(kind=8) :: N_at, N_walk, N_max
           integer(kind=8) :: eq_it, samples, dt_sam
           real(kind=8) :: dt, Er
           real(kind=8) :: a, b0, b1
-          character(len=50) :: coords_input_file
+          character(len=50) :: coords_input_file, eq_out_file
 
           open(unit=io_unit, file=input_file, action='Read')
               !Reading Atoms and walkers
@@ -112,6 +112,7 @@
               !Reading coords input file
               read(io_unit,*)
               read(io_unit,'(10x,a50)') coords_input_file
+              read(io_unit,'(10x,a50)') eq_out_file
               read(io_unit,*)
 
           close(io_unit)
@@ -176,25 +177,25 @@
 
 !---------------------------------------------------------------------------------------------------------------------
 
-      subroutine save_rank_dmc(my_rank, it, Nt, ene)
+      subroutine save_rank_dmc(my_rank, it, Nt, ene, acc_prob, out_file)
               integer, intent(in) :: my_rank 
               integer(kind=8), intent(in) :: it
               integer(kind=8), intent(in) :: Nt(it)
               real(kind=8), intent(in) :: ene(it)
+              real(kind=8), intent(in) :: acc_prob(it)
+              character(len=50) :: out_file
               integer(kind=8) :: i
               integer :: io_unit=10
               character(len=25) :: my_file
 
-              !out_unit = 5 + my_rank
 
-         write(my_file, '(a6,i1,a4)') 'my_equilibration_',my_rank,'.txt'
-         open(unit = io_unit, file=my_file, action='write')
-         write(io_unit, *) 'Step       Num walks        Ene'
-                  do i = 1, it
-                       write(io_unit,'(i10,4x,i10,4x,f15.10)') &
-                       i,Nt(i),ene(i)
-                  end do
-              close(io_unit)
+        open(unit = io_unit, file=out_file, action='write')
+        write(io_unit, *) 'Step       Num walks        Ene     acc_prob'
+        do i = 1, it
+        write(io_unit,'(i10,4x,i10,4x,f15.10,4x,f15.10)') &
+              i,Nt(i),ene(i),acc_prob(i) 
+        end do
+        close(io_unit)
 
       end subroutine save_rank_dmc 
 

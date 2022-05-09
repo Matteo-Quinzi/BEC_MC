@@ -222,7 +222,6 @@ module bec_dmc
               integer(kind=8) :: i, N_walk_new
               logical, dimension(N_walk) :: j0
 
-              print *, 'Er', Er
               !At the beginning N_walk is the number of alive walkers
               N_walk_new = N_walk
 

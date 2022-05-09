@@ -1,0 +1,43 @@
+ 
+ 
+ DMC run started :
+ Date : 2022/05/08
+ Time : 18:18:38
+ 
+ 
+ ------------------------------------
+ Reading : 
+ temp_dmc.in                                                                    
+  
+ Output will be saved in : 
+ temp_dmc.in                                                                    
+  
+ 
+Number of atoms          :            128
+Number of walkers        :            100
+Max num of walkers       :         100000
+Number of eq. iterations :          10000
+Number of samples        :           1000
+Steps between two samples:             10
+Timestep                 :        0.0010000000
+Energy scale             :        1.6883113000
+Scattering length        :        0.0043300000
+Guiding func. param b0   :        0.4740000000
+Guiding func. param b1   :        0.0014000000
+Coordinates input file   : final_coords.txt                                  
+Equilibration output file: equilibration_2.out                               
+ 
+ -----------------------------------------------
+ Initial Distribution setted 
+ CPU time :    10.9884011745453     
+ Typical acceptance ratio :   0.543796015625000     
+ 
+ 
+ --------------------------------------
+ Equilibration concluded
+ Equilibration time :    798.017940998077     
+ Average equilibration energy   :    1.68754636297224     
+ Average acceptance probability :   0.721678694125647     
+ Average number of walkers      :    99.9405000000000     
+ 
+ 

@@ -4,7 +4,7 @@ N_walk  = 100
 N_max   = 100000
 
 #Number of eq.steps / samplings / delta_t between samplings / timestep
-eq_it   = 100
+eq_it   = 2000
 samples = 1000
 dt_sam  = 10
 dt      = 0.1

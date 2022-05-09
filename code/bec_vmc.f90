@@ -48,8 +48,8 @@ module bec_vmc
                integer :: seed_size, time_int, i
                integer :: seed_array(2)
                
-               seed_array(1) = 2147483562
-               seed_array(2) = 2147483398
+               seed_array(1) = 2147483562 - 100*my_rank
+               seed_array(2) = 2147483398 - 100*my_rank
                !Put in the fixed seed
                call random_seed(put=seed_array)
 

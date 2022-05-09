@@ -10,7 +10,12 @@ program DMC_omp
       use omp_lib
       implicit none
 
-      
+     
+      !omp variables
+      !It is useful to get the thread id in order to seed the rng
+      integer :: thread_id
+
+
       !Date and Time
       character(len=8) :: date
       character(len=10) :: time
@@ -21,7 +26,7 @@ program DMC_omp
       real(kind=8)    :: dt                       !timestep width
       real(kind=8)    :: Er                       !Trial energy
       real(kind=8)    :: a, b0, b1                !Scattering length and params of the guiding function
-      character(len=50) :: coords_input_file
+      character(len=50) :: coords_input_file, eq_out_file
       real(kind=8), allocatable :: acc_prob(:)            !Overall acc prob for VMC set up
       real(kind=8), allocatable :: configurations(:,:,:)  !Atoms configurations
       logical, allocatable :: flag(:)
@@ -37,7 +42,7 @@ program DMC_omp
       real(kind=8), allocatable :: walk_en(:), walk_en_old(:)     !Energy for each walker at a given step
       real(kind=8), allocatable :: Et(:)          !Average energy at each step
       real(kind=8), allocatable :: F_driv(:,:,:)  !Driving force for all walkers (N_max:N_at:3)
-      real(kind=8) :: acc_prob_eq                 !Acceptance probability in equilibration procedure
+      real(kind=8),allocatable :: acc_prob_eq(:)                 !Acceptance probability in equilibration procedure for each step
       real(kind=8), allocatable :: temp_prob_eq(:)
       logical :: eq_accepted
       integer(kind=8) :: N_walk_start
@@ -68,7 +73,7 @@ program DMC_omp
       call read_input_file()
       !Reading input data
       call read_data_dmc(N_at, N_walk, N_max, eq_it, samples, &
-                     dt_sam, dt, Er, a, b0, b1, coords_input_file)
+                     dt_sam, dt, Er, a, b0, b1, coords_input_file, eq_out_file)
       !Sanity check
       if (N_walk > N_max) then
           write(*,*) 'ERROR : N_walk can not be greater than N_max !!!'
@@ -89,6 +94,7 @@ program DMC_omp
       write(*,'(a27,4x,f15.10)') 'Guiding func. param b0   : ', b0
       write(*,'(a27,4x,f15.10)') 'Guiding func. param b1   : ', b1
       write(*,'(a27,a50)')       'Coordinates input file   : ', coords_input_file
+      write(*,'(a27,a50)')       'Equilibration output file: ', eq_out_file
 
       !ALLOCATING CONFIGURATIONS ARRAYS
       allocate(configurations(N_max, N_at, 3))
@@ -105,7 +111,7 @@ program DMC_omp
       acc_prob_vmc = 0.d0
       allocate(temp_prob(N_walk))
 
-      !$OMP PARALLEL DO  
+      !$OMP PARALLEL DO 
       do i = 1, N_walk
             flag(i) = .True.     !Walker is set to alive
             if (i .eq. 1) then 
@@ -139,19 +145,18 @@ program DMC_omp
       !The most expensive subroutine is the diffusion one, which
       ! evaluates both driving forces and local energies. It is this one
       ! that I want to parallelize.
-      allocate(Nt(eq_it), Et(eq_it))
+      allocate(Nt(eq_it), Et(eq_it), acc_prob_eq(eq_it))
       allocate(walk_en(N_max), walk_en_old(N_max))
       allocate(F_driv(N_max,N_at,3))
 
       !Evaluating initial driving forces and initial local energies
-      !$OMP PARALLEL DO
+      !$OMP PARALLEL DO 
       do i = 1, N_walk
           F_driv(i,:,:) = driving_force(a, b0, b1, N_at, configurations(i, :, :))
           walk_en(i)    = local_energy(a, b0, b1, N_at, configurations(i,:,:)) 
       end do
       !$OMP END PARALLEL DO
 
-      acc_prob_eq = 0.d0
       allocate(temp_prob_eq(N_max))
 
       !Saving initial number of walker
@@ -159,11 +164,12 @@ program DMC_omp
 
       !Fixing population control parameter
       !alpha = N_at * N_walk_start / dt
-      alpha = 1.0d0 / dt
+      alpha = 1.0d0 / (N_walk_start * dt)
 
       tic = omp_get_wtime()
       !Equilibration loop
       do it = 1, eq_it
+          acc_prob_eq(it) = 0.d0
 
           !Diffusing alive walkers
           !$OMP PARALLEL DO reduction(+:acc_prob_eq)
@@ -172,7 +178,7 @@ program DMC_omp
               walk_en_old(i) = walk_en(i)
               !Each walker diffuse with accept/reject step
               call one_walker_diffusion(a, b0, b1, N_at, dt, configurations(i, :, :), F_driv(i, :, :), walk_en(i), eq_accepted)
-              if (eq_accepted .eq. .True.) acc_prob_eq = acc_prob_eq + 1.d0/(N_walk*it)
+              if (eq_accepted .eq. .True.) acc_prob_eq(it) = acc_prob_eq(it) + 1.d0/N_walk
           end do
           !$OMP END PARALLEL DO
 
@@ -191,11 +197,20 @@ program DMC_omp
               Er = Et(it) + alpha * log(N_ratio)
           end if
 
-          print *, Nt(it), Et(it)
-
       end do
       toc = omp_get_wtime()
-      print *, toc-tic
+
+      !DIAGNOSTIC PRINTOUT AFTER EQUILIBRATION
+      write(*,*) '--------------------------------------'
+      write(*,*) 'Equilibration concluded'
+      write(*,*) 'Equilibration time : ', toc - tic
+      write(*,*) 'Average equilibration energy   : ', sum(Et) / eq_it
+      write(*,*) 'Average acceptance probability : ', sum(acc_prob_eq) / eq_it
+      write(*,*) 'Average number of walkers      : ', 1.d0*(sum(Nt)) / eq_it
+      write(*,*)
+      write(*,*) 
+      
+      call save_rank_dmc(0, eq_it, Nt, Et, acc_prob_eq, eq_out_file) 
 
       deallocate(temp_prob_eq)
 
@@ -204,7 +219,7 @@ program DMC_omp
 
 
 
-      deallocate(Nt, Et)
+      deallocate(Nt, Et, acc_prob_eq)
       deallocate(walk_en, walk_en_old)
       deallocate(F_driv)
 
