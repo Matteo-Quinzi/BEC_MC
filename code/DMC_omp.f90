@@ -27,6 +27,8 @@ program DMC_omp
       real(kind=8)    :: Er                       !Trial energy
       real(kind=8)    :: a, b0, b1                !Scattering length and params of the guiding function
       character(len=50) :: coords_input_file, eq_out_file
+      integer(kind=8) :: Nl ! # of points where to evaluate the radial density and density matrix
+      real(kind=8) :: r_max !Maximum radius where to look for the OBDM
       real(kind=8), allocatable :: acc_prob(:)            !Overall acc prob for VMC set up
       real(kind=8), allocatable :: configurations(:,:,:)  !Atoms configurations
       logical, allocatable :: flag(:)
@@ -47,6 +49,13 @@ program DMC_omp
       logical :: eq_accepted
       integer(kind=8) :: N_walk_start
       real(kind=8) :: N_ratio, alpha
+
+      !Sampling variables
+      integer(kind=8) :: sample_it
+      real(kind=8), allocatable :: rho_rad(:), r_at(:), r_mesh(:)
+      integer(kind=8),allocatable :: rho_rad_walk(:,:)
+      real(kind=8) :: mean_Et
+
 
       !CPU time variables
       real(kind=8) :: tic, toc
@@ -73,7 +82,8 @@ program DMC_omp
       call read_input_file()
       !Reading input data
       call read_data_dmc(N_at, N_walk, N_max, eq_it, samples, &
-                     dt_sam, dt, Er, a, b0, b1, coords_input_file, eq_out_file)
+                     dt_sam, dt, Er, a, b0, b1, coords_input_file, eq_out_file,&
+                     Nl, r_max)
       !Sanity check
       if (N_walk > N_max) then
           write(*,*) 'ERROR : N_walk can not be greater than N_max !!!'
@@ -95,6 +105,8 @@ program DMC_omp
       write(*,'(a27,4x,f15.10)') 'Guiding func. param b1   : ', b1
       write(*,'(a27,a50)')       'Coordinates input file   : ', coords_input_file
       write(*,'(a27,a50)')       'Equilibration output file: ', eq_out_file
+      write(*,'(a27,i10)')       'Meshgrid-side points     : ', Nl
+      write(*,'(a27,f15.10)')    'Maximum radius for OBDM  : ', r_max
 
       !ALLOCATING CONFIGURATIONS ARRAYS
       allocate(configurations(N_max, N_at, 3))
@@ -213,17 +225,81 @@ program DMC_omp
       call save_rank_dmc(0, eq_it, Nt, Et, acc_prob_eq, eq_out_file) 
 
       deallocate(temp_prob_eq)
-
-
-
-
-
-
       deallocate(Nt, Et, acc_prob_eq)
+
+      !SAMPLING PHASE
+      ! After equilibration we continue with the diffusion algorithm
+      ! to intermittently sample the configuration space. Each sample 
+      ! is used to build up the radial density distribution function
+      ! and the (radial part of the) One Body Density Matrix 
+
+      !definig number of total sampling iterations 
+      sample_it = samples * dt_sam
+
+      !We evaluate energy only at intermediate steps now
+
+      !Allocating radial quantities
+      allocate(rho_rad(Nl), r_at(N_at), r_mesh(Nl))
+      allocate(rho_rad_walk(N_max,Nl))
+      !Initializing mesh and rho
+      r_mesh = define_mesh(Nl, r_max)
+      rho_rad = 0.d0  
+
+      tic = omp_get_wtime()
+      !Diffusion cycle works as before
+      do it = 1, sample_it
+
+          !Diffusing alive walkers
+          !$OMP PARALLEL DO 
+          do i = 1, N_walk
+              !Saving starting walker energy
+              walk_en_old(i) = walk_en(i)
+              !Each walker diffuse with accept/reject step
+              call one_walker_diffusion(a, b0, b1, N_at, dt, configurations(i, :, :), F_driv(i, :, :), walk_en(i), eq_accepted)
+          end do
+          !$OMP END PARALLEL DO
+
+          !Branching
+          !N_walk, walk_en, F_driv are going to be updated with the number of replicas
+          call branching(N_walk, N_max, N_at, configurations, walk_en, walk_en_old, F_driv, flag, dt, Er)
+
+          !Adjusting the energy scale
+          if ( mod(it,100) .eq. 0) then
+              mean_Et = sum(walk_en(1:N_walk)) / N_walk
+              N_ratio = (N_walk_start*1.d0) / (N_walk*1.d0)
+              Er = mean_Et + alpha * log(N_ratio)
+          end if
+
+          !HERE WE ADD THE SAMPLING STEP
+          if ( mod(it,dt_sam) .eq. 0) then
+                  !$OMP PARALLEL DO
+                  do i = 1,N_walk
+                      r_at = evaluate_atomic_distances(N_at, configurations(i,:,:))
+                      rho_rad_walk(i,:) =  one_walk_radial_distribution(N_at, r_at, Nl, r_mesh)
+                  end do
+                  !$OMP END PARALLEL DO
+
+                  !Putting it all together
+                  rho_rad(:) = (/( rho_rad(i) + 1.d0*sum(rho_rad_walk(:,i))/N_walk , i=1,Nl )/)
+          end if
+      end do
+      toc = omp_get_wtime()
+
+      rho_rad = rho_rad/samples
+
+      !DIAGNOSTIC PRINTOUT
+      write(*,*) '--------------------------------------'
+      write(*,*) 'Sampling procedure completed'
+      write(*,*) 'Time taken : ', toc-tic
+      write(*,*) 'Saving radial distribution function in the out file'
+      call save_rho_rad(Nl, r_mesh, rho_rad)
+      write(*,*)
+      write(*,*)
+
       deallocate(walk_en, walk_en_old)
       deallocate(F_driv)
-
-
       deallocate(configurations)
       deallocate(flag)
+
+      write(*,*) 'PROGRAM COMPLETED CORRECTLY'
 end program DMC_omp

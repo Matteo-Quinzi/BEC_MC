@@ -313,5 +313,63 @@ module bec_dmc
 
         end subroutine branching
 
+!---------------------------------------------------------------------------------------------------------------------------------
+
+       function evaluate_atomic_distances(N_at, coords) result (r_at)
+               !Evaluates atomic distances for a given configuration
+               integer(kind=8), intent(in) :: N_at
+               real(kind=8), intent(in) :: coords(N_at, 3)
+               integer(kind=8) :: i
+               real(kind=8) :: r_at(N_at)
+
+               r_at(:) = (/( sqrt(coords(i,1)*coords(i,1) + coords(i,2)*coords(i,2) + &
+                            coords(i,3)*coords(i,3)), i= 1,N_at )/)
+
+       end function evaluate_atomic_distances
+ 
+!---------------------------------------------------------------------------------------------------------------------------------
+
+       function define_mesh(Nl, r_max) result (r_mesh)
+               !Define the meshgrid used to evaluate the radial 
+               ! distribution of particles
+               integer(kind=8), intent(in) :: Nl
+               real(kind=8), intent(in) :: r_max
+               real(kind=8) :: r_mesh(Nl)
+               real(kind=8) :: delta_r
+               integer(kind=8) :: i
+
+               delta_r = r_max / (1.d0*Nl)
+               r_mesh(:) = (/ (i*delta_r , i=1,Nl) /)
+
+       end function define_mesh
+!----------------------------------------------------------------------------------------------------------------------------------
+
+        function one_walk_radial_distribution(N_at, r_at, Nl, r_mesh) result (rho_rad)
+                !Evaluates the radial distribution function given one 
+                ! congìfigurations of atoms
+                integer(kind=8), intent(in) :: N_at
+                real(kind=8), intent(in) :: r_at(N_at) !Radial distances of all atoms
+                integer(kind=8), intent(in) :: Nl      
+                real(kind=8), intent(in) :: r_mesh(Nl) !points on the radial mesh
+                integer(kind=8) :: rho_rad(Nl)
+                integer(kind=8) :: i,j
+                
+                rho_rad(1) = 0
+                do j = 1, N_at
+                    if (r_at(j) .le. r_mesh(1)) then
+                           rho_rad(1) = rho_rad(1) + 1
+                   end if 
+                end do
+
+                do i = 2,Nl
+                    rho_rad(i) = 0
+                    do j = 1,N_at
+                        if ((r_at(j) .le. r_mesh(i)) .and. (r_at(j) .gt. r_mesh(i-1))) then
+                                rho_rad(i) = rho_rad(i) + 1
+                        end if
+                    end do
+                end do 
+
+        end function one_walk_radial_distribution
 !-----------------------------------------------------------------------------------------------------------------------------------
 end module bec_dmc

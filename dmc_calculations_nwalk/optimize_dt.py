@@ -4,7 +4,7 @@ import sys
 
 N_walk = [100, 500, 1000, 5000]
 
-for i in range(1,len(N_walk)):
+for i in range(3,len(N_walk)):
     output_file = 'equilibration_%d.out' % i
     input_file_script = '''
 #Number of atoms and walkers and maximum number of walkers
@@ -17,7 +17,7 @@ eq_it   = 10000
 samples = 1000
 dt_sam  = 10
 dt      = 0.00001
-Er      = 50.6883113
+Er      = 2.6883113
 
 #Info about the guiding function
 a       = 0.00433

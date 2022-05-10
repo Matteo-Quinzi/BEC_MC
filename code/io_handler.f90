@@ -78,12 +78,15 @@
 
       subroutine read_data_dmc(N_at, N_walk, N_max, eq_it, samples, &
                                dt_sam, dt, Er, a, b0, b1, &
-                               coords_input_file, eq_out_file)
+                               coords_input_file, eq_out_file, &
+                               Nl, r_max)
           integer(kind=8) :: N_at, N_walk, N_max
           integer(kind=8) :: eq_it, samples, dt_sam
           real(kind=8) :: dt, Er
           real(kind=8) :: a, b0, b1
           character(len=50) :: coords_input_file, eq_out_file
+          integer(kind=8) :: Nl !number of points on the meshgrid
+          real(kind=8) :: r_max !Maximum radius where to look for OBDM 
 
           open(unit=io_unit, file=input_file, action='Read')
               !Reading Atoms and walkers
@@ -113,6 +116,13 @@
               read(io_unit,*)
               read(io_unit,'(10x,a50)') coords_input_file
               read(io_unit,'(10x,a50)') eq_out_file
+              read(io_unit,*)
+
+              !Reading data for the OBDM and radial distribution
+              !function
+              read(io_unit,*)
+              read(io_unit,'(10x,i10)') Nl
+              read(io_unit,'(10x,f15.10)') r_max
               read(io_unit,*)
 
           close(io_unit)
@@ -217,5 +227,21 @@
               end do
               close(10)
       end subroutine save_output
+
+!--------------------------------------------------------------------------------------------------------------------------
+
+      subroutine save_rho_rad(Nl, r_mesh, rho_rad)
+              integer(kind=8), intent(in) :: Nl
+              real(kind=8), intent(in) :: r_mesh(Nl), rho_rad(Nl)
+              integer:: i
+
+              open(unit=io_unit, file=output_file, action='Write')
+              write(io_unit,*) 'r                      rho(r)'
+              do i = 1,Nl
+              write(io_unit,'(f15.10,4x,f15.10)') r_mesh(i), rho_rad(i)
+              end do
+              close(io_unit)
+      end subroutine
+
 
       end module io_handler
