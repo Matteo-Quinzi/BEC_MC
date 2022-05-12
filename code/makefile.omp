@@ -2,7 +2,7 @@ COMPILER=ifort
 OPTIMIZATION=-Ofast
 
 DMC: bec_dmc.o bec_vmc.o io_handler.o DMC.f90
-	$(COMPILER) $(OPTIMIZATION) -qopenmp io_handler.o bec_dmc.o bec_vmc.o DMC_omp.f90 -o DMC_omp.x 
+	$(COMPILER) $(OPTIMIZATION)  -qopenmp -llapack io_handler.o bec_dmc.o bec_vmc.o DMC_omp.f90 -o DMC_omp.x 
 io_handler.o: io_handler.f90
 	$(COMPILER) $(OPTIMIZATION) -qopenmp -c io_handler.f90
 bec_dmc.o: bec_dmc.f90 

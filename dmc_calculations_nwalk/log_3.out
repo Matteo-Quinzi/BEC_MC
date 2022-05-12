@@ -2,7 +2,7 @@
  
  DMC run started :
  Date : 2022/05/10
- Time : 17:23:09
+ Time : 19:21:31
  
  
  ------------------------------------
@@ -26,10 +26,3 @@ Guiding func. param b0   :        0.4740000000
 Guiding func. param b1   :        0.0014000000
 Coordinates input file   : final_coords.txt                                  
 Equilibration output file: equilibration_3.out                               
- 
- -----------------------------------------------
- Initial Distribution setted 
- CPU time :    522.246474027634     
- Typical acceptance ratio :   0.543741453125000     
- 
- 

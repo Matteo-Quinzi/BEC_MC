@@ -55,13 +55,29 @@ program DMC_omp
       real(kind=8), allocatable :: rho_rad(:), r_at(:), r_mesh(:)
       integer(kind=8),allocatable :: rho_rad_walk(:,:)
       real(kind=8) :: mean_Et
+      integer(kind=8), allocatable :: obdm_walk(:,:,:)    !OBDM  for all walkers (N_max, Nl, Nl)
+      real(kind=8), allocatable :: obdm_lzero(:,:)
+
+      !Variables in OBDM diagonalization
+      integer :: M      !number of evaluated eigenvalues
+      real(kind=8), allocatable :: occupation_numbers(:)
+      integer :: ldz 
+      real(kind=8), allocatable :: z(:,:)
+      real(kind=8), allocatable :: work(:)
+      integer :: lwork
+      integer, allocatable :: iwork(:)
+      integer, allocatable :: ifail(:)
+      integer :: info
+      character(len=50) :: eigen_out_file
+      real(kind=8) :: check_sum
+
 
 
       !CPU time variables
       real(kind=8) :: tic, toc
 
       !Loops indexes
-      integer(kind=8) :: i, it
+      integer(kind=8) :: i, j, it
 
       !INITIALIZING RNG
       call fix_rng(0)
@@ -241,9 +257,13 @@ program DMC_omp
       !Allocating radial quantities
       allocate(rho_rad(Nl), r_at(N_at), r_mesh(Nl))
       allocate(rho_rad_walk(N_max,Nl))
+      allocate(obdm_walk(N_max,Nl,Nl))
+      allocate(obdm_lzero(Nl, Nl))
+
       !Initializing mesh and rho
-      r_mesh = define_mesh(Nl, r_max)
+      !r_mesh = define_mesh(Nl, r_max)
       rho_rad = 0.d0  
+      obdm_lzero = 0.d0
 
       tic = omp_get_wtime()
       !Diffusion cycle works as before
@@ -272,30 +292,96 @@ program DMC_omp
 
           !HERE WE ADD THE SAMPLING STEP
           if ( mod(it,dt_sam) .eq. 0) then
-                  !$OMP PARALLEL DO
+                  !$OMP PARALLEL DO private(r_mesh, r_at)
                   do i = 1,N_walk
+                      r_mesh = define_mesh(Nl, r_max)
                       r_at = evaluate_atomic_distances(N_at, configurations(i,:,:))
                       rho_rad_walk(i,:) =  one_walk_radial_distribution(N_at, r_at, Nl, r_mesh)
+                      obdm_walk(i,:,:) = one_walk_radial_obdm_zero(N_at, r_at, Nl, r_mesh)
                   end do
                   !$OMP END PARALLEL DO
 
                   !Putting it all together
-                  rho_rad(:) = (/( rho_rad(i) + 1.d0*sum(rho_rad_walk(:,i))/N_walk , i=1,Nl )/)
+                  rho_rad(:) = (/( rho_rad(i) + (1.d0*sum(rho_rad_walk(1:N_walk,i)))/(1.d0*N_walk) , i=1,Nl )/)
+                  
+                  do i = 1,Nl
+                      do j = i,Nl
+                          obdm_lzero(i,j) = obdm_lzero(i,j) + ( sum(obdm_walk(1:N_walk,i,j))*1.d0 ) / (1.d0*N_walk)
+                      end do
+                  end do
           end if
       end do
+
+      !Evaluate public mesh_grid
+      r_mesh = define_mesh(Nl, r_max)
+
       toc = omp_get_wtime()
 
-      rho_rad = rho_rad/samples
+      rho_rad = rho_rad/(N_at*samples*1.d0)
+      obdm_lzero = obdm_lzero/(N_at*samples*1.d0)
+
+      check_sum = 0.d0
+      do i=1,Nl
+       check_sum = check_sum + obdm_lzero(i,i)
+      end do
+
 
       !DIAGNOSTIC PRINTOUT
       write(*,*) '--------------------------------------'
       write(*,*) 'Sampling procedure completed'
       write(*,*) 'Time taken : ', toc-tic
       write(*,*) 'Saving radial distribution function in the out file'
+      write(*,*) 'Radial distribution sums to : ',  sum(rho_rad)
+      write(*,*) 'Check sum                   : ', check_sum
       call save_rho_rad(Nl, r_mesh, rho_rad)
       write(*,*)
       write(*,*)
 
+      !DIAGONALIZING THE OBDM 
+      ! The obdm (l=0) is diagonalized to obtain the natural orbitals
+      ! and their occupation values. The macroscopically occupated orbital will
+      ! give the fraction of atoms within the condensate
+
+      write(*,*) '-----------------------------------------'
+      write(*,*) 'Diagonalizing the OBDM (l=0)'
+
+
+      !I need LDZ=Nl, Z(Nl,Nl)
+      !I need Lwork=8*Nl, work(lwork)
+      !iwork(5*Nl)
+      !ifail(N)
+      !info
+      allocate(occupation_numbers(Nl))
+      ldz = Nl
+      allocate(z(ldz,Nl))
+      lwork = 8*Nl
+      allocate(work(lwork))
+      allocate(iwork(5*Nl))
+      allocate(ifail(Nl))
+
+      tic = omp_get_wtime()
+      call dsyevx('V', 'I', 'U', Nl, obdm_lzero, Nl, &
+                  0.d0, 1.d0, 1, 10, 1.d-5, M, &
+                  occupation_numbers, z, ldz, work, lwork, iwork, ifail, info)
+      toc = omp_get_wtime()
+
+      occupation_numbers = 1.d0 - occupation_numbers
+      occupation_numbers(M:Nl) = 0.d0
+
+      !DIAGNOSTIC PRINTOUT
+      write(*,*)
+      write(*,*) 'Diagonalization completed'
+      write(*,*) 'Time in dsyevx : ', toc-tic
+      write(*,*) 'Number of eigenvalues found : ', M
+      write(*,*) 'Largest eigenvalue found : ', maxval(occupation_numbers(:))
+      write(*,*) 'Saving eigenvalues and eigenvectors of the OBDM in eigenvec.out'
+      write(*,*) 'Summing eigenvalues :', sum(occupation_numbers(1:M))
+
+      eigen_out_file = 'eigenvec.out'
+      call save_eigenvectors(Nl, 1, r_mesh, obdm_lzero(:,1), eigen_out_file) 
+
+
+      deallocate(obdm_walk, obdm_lzero)
       deallocate(walk_en, walk_en_old)
       deallocate(F_driv)
       deallocate(configurations)

@@ -1,0 +1,46 @@
+ 
+ 
+ DMC run started :
+ Date : 2022/05/12
+ Time : 14:23:57
+ 
+ 
+ ------------------------------------
+ Reading : 
+ DMC.in                                                                         
+  
+ Output will be saved in : 
+ DMC.out                                                                        
+  
+ 
+Number of atoms          :             10
+Number of walkers        :           1000
+Max num of walkers       :           5000
+Number of eq. iterations :          10000
+Number of samples        :          10000
+Steps between two samples:             10
+Timestep                 :        0.0010000000
+Energy scale             :        5.6883113000
+Scattering length        :        0.0043300000
+Guiding func. param b0   :        0.4740000000
+Guiding func. param b1   :        0.0014000000
+Coordinates input file   : final_coords.txt                                  
+Equilibration output file: equilibration.out                                 
+Meshgrid-side points     :       1000
+Maximum radius for OBDM  :    2.5000000000
+ 
+ -----------------------------------------------
+ Initial Distribution setted 
+ CPU time :    1.11361408233643     
+ Typical acceptance ratio :   0.516051300000000     
+ 
+ 
+forrtl: severe (174): SIGSEGV, segmentation fault occurred
+Image              PC                Routine            Line        Source             
+DMC_omp.x          000000000041F00A  Unknown               Unknown  Unknown
+libpthread-2.31.s  00007F16CB4CD3C0  Unknown               Unknown  Unknown
+DMC_omp.x          00000000004077BE  Unknown               Unknown  Unknown
+DMC_omp.x          0000000000411596  Unknown               Unknown  Unknown
+DMC_omp.x          00000000004039A2  Unknown               Unknown  Unknown
+libc-2.31.so       00007F16CB2EB0B3  __libc_start_main     Unknown  Unknown
+DMC_omp.x          00000000004038AE  Unknown               Unknown  Unknown

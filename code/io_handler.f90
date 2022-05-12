@@ -243,5 +243,23 @@
               close(io_unit)
       end subroutine
 
+!------------------------------------------------------------------------------------------------------------------------------
+
+      subroutine save_eigenvectors(Nl, M, r_mesh, eigenvecs, eigenvec_out_file)
+              integer(kind=8), intent(in) :: Nl
+              integer, intent(in) ::  M
+              real(kind=8) :: r_mesh(Nl)
+              real(kind=8), intent(in) :: eigenvecs(Nl,M)
+              character(len=50) :: eigenvec_out_file
+              integer(kind=8) :: i
+
+              open(unit=io_unit, file=eigenvec_out_file, action='Write')
+              do i = 1,Nl
+                  write(io_unit,*) r_mesh(i), eigenvecs(i,:)
+              end do
+              close(io_unit)
+
+      end subroutine save_eigenvectors
+
 
       end module io_handler

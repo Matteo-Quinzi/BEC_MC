@@ -354,22 +354,85 @@ module bec_dmc
                 integer(kind=8) :: rho_rad(Nl)
                 integer(kind=8) :: i,j
                 
-                rho_rad(1) = 0
+                rho_rad = 0
+
                 do j = 1, N_at
                     if (r_at(j) .le. r_mesh(1)) then
                            rho_rad(1) = rho_rad(1) + 1
                    end if 
                 end do
 
-                do i = 2,Nl
-                    rho_rad(i) = 0
-                    do j = 1,N_at
-                        if ((r_at(j) .le. r_mesh(i)) .and. (r_at(j) .gt. r_mesh(i-1))) then
+                do i = 2, Nl
+                    do j = 1, N_at
+                        if ( ( r_at(j) .gt. r_mesh(i-1) ) .and. ( r_at(j) .le. r_mesh(i) ) ) then
                                 rho_rad(i) = rho_rad(i) + 1
                         end if
                     end do
                 end do 
+                
+                !Sanity check 
+                if (sum(rho_rad) .gt. N_at) then
+                        print *, 'More observations than atoms : ', sum(rho_rad)
+                        print *, r_mesh
+                end if
 
         end function one_walk_radial_distribution
+
+!-----------------------------------------------------------------------------------------------------------------------------------
+
+        function one_walk_radial_obdm_zero(N_at, r_at, Nl, r_mesh) result (obdm)
+                !Evaluate the radial OBDM associated to angular momentum l=0
+                integer(kind=8), intent(in) :: N_at, Nl
+                real(kind=8), intent(in) :: r_at(N_at), r_mesh(Nl)
+                integer(kind=8) :: obdm(Nl, Nl)
+                integer(kind=8) :: at_1, at_2, i, j
+                logical :: is_at_1, is_at_2, diff_cond
+                integer(kind=8) :: check_sum
+
+                obdm = 0
+
+                !The matrix is forced to be symmetric, so only the upper triangle
+                ! will be evaluated
+
+                do at_1 = 1, N_at
+                    do at_2 = 1,N_at
+                        if ( (r_at(at_1) .le. r_mesh(1)) .and. (r_at(at_2) .le. r_mesh(1)) ) then
+                                obdm(1,1) = obdm(1,1) + 1
+                        end if
+                    end do
+                end do
+
+                do i = 2, Nl      !Spanning matrix elements (i,j) in the 
+                    do j = i, Nl  ! upper triangle
+
+                        do at_1 = 1, N_at
+                            !There is one atom between (r_mesh(i-1),r_mesh(i))
+                            is_at_1 = ((r_at(at_1) .le. r_mesh(i)) .and. (r_at(at_1) .gt. r_mesh(i-1)))
+
+                            do at_2 = 1, N_at
+
+                            !There is another atom between (r_mesh(j-1), r_mesh(j))
+                            is_at_2 = ( (r_at(at_2) .le. r_mesh(j)) .and. (r_at(at_2) .gt. r_mesh(j-1)) )
+
+                            !If atoms are in the right positions add an observation
+                            if (is_at_1 .and. is_at_2 ) obdm(i,j) = obdm(i,j) + 1
+
+                            end do
+                        end do
+                    end do
+                end do
+
+                obdm = obdm/2
+
+                !Sanity check
+                check_sum = 0
+                do i = 1,Nl
+                    check_sum = check_sum + obdm(i,i)
+                end do
+                if (check_sum .gt. N_at) then
+                        print *, 'More observations than atoms on the diagonal : ', check_sum
+                end if
+
+        end function one_walk_radial_obdm_zero
 !-----------------------------------------------------------------------------------------------------------------------------------
 end module bec_dmc
