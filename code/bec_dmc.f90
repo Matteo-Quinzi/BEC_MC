@@ -329,17 +329,17 @@ module bec_dmc
  
 !---------------------------------------------------------------------------------------------------------------------------------
 
-       function define_mesh(Nl, r_max) result (r_mesh)
+       function define_mesh(Nl, r_min, r_max) result (r_mesh)
                !Define the meshgrid used to evaluate the radial 
                ! distribution of particles
                integer(kind=8), intent(in) :: Nl
-               real(kind=8), intent(in) :: r_max
+               real(kind=8), intent(in) :: r_min, r_max
                real(kind=8) :: r_mesh(Nl)
                real(kind=8) :: delta_r
                integer(kind=8) :: i
 
-               delta_r = r_max / (1.d0*Nl)
-               r_mesh(:) = (/ (i*delta_r , i=1,Nl) /)
+               delta_r = (r_max - r_min) / (1.d0*(Nl-1))
+               r_mesh(:) = (/ (r_min + (i-1)*delta_r , i=1,Nl) /)
 
        end function define_mesh
 !----------------------------------------------------------------------------------------------------------------------------------
@@ -394,25 +394,24 @@ module bec_dmc
                 !The matrix is forced to be symmetric, so only the upper triangle
                 ! will be evaluated
 
-                do at_1 = 1, N_at
-                    do at_2 = 1,N_at
-                        if ( (r_at(at_1) .le. r_mesh(1)) .and. (r_at(at_2) .le. r_mesh(1)) ) then
-                                obdm(1,1) = obdm(1,1) + 1
-                        end if
-                    end do
-                end do
-
-                do i = 2, Nl      !Spanning matrix elements (i,j) in the 
+                do i = 1, Nl      !Spanning matrix elements (i,j) in the 
                     do j = i, Nl  ! upper triangle
 
                         do at_1 = 1, N_at
-                            !There is one atom between (r_mesh(i-1),r_mesh(i))
-                            is_at_1 = ((r_at(at_1) .le. r_mesh(i)) .and. (r_at(at_1) .gt. r_mesh(i-1)))
+                            if ( i .eq. 1) then
+                                is_at_1 = r_at(at_1) .le. r_mesh(1)
+                            else
+                                !There is one atom between (r_mesh(i-1),r_mesh(i))
+                                is_at_1 = ((r_at(at_1) .le. r_mesh(i)) .and. (r_at(at_1) .gt. r_mesh(i-1)))
+                             end if
 
                             do at_2 = 1, N_at
-
-                            !There is another atom between (r_mesh(j-1), r_mesh(j))
-                            is_at_2 = ( (r_at(at_2) .le. r_mesh(j)) .and. (r_at(at_2) .gt. r_mesh(j-1)) )
+                            if (j .eq. 1) then
+                                    is_at_2 = r_at(at_2) .le. r_mesh(1)
+                            else
+                                !There is another atom between (r_mesh(j-1), r_mesh(j))
+                                is_at_2 = ( (r_at(at_2) .le. r_mesh(j)) .and. (r_at(at_2) .gt. r_mesh(j-1)) )
+                            end if
 
                             !If atoms are in the right positions add an observation
                             if (is_at_1 .and. is_at_2 ) obdm(i,j) = obdm(i,j) + 1
@@ -463,28 +462,24 @@ module bec_dmc
                         end if
                     end do
                 end if
+                      
+                !We keep the row index referred to the ghost
+                do j = 1, Nl    !Column index
+                    do k = 1, N_at  !Atom index
+                         !Look if there is one atom
+                         if ( j .eq. 1) then
+                                 is_at = (r_at(k) .le. r_mesh(1))
+                         else
+                                 is_at = ((r_at(k) .gt. r_mesh(j-1)) .and. (r_at(k) .le. r_mesh(j)))
+                         end if
 
-
-                !case i=j=1
-                if (where_ghost .eq. 1) then
-                    do k = 1,N_at
-                        is_at = (r_at(k) .le. r_mesh(1))
-                        if (is_at) obdm(1,1) = obdm(1,1) + 1
+                         if (is_at) then
+                                 !Symmetrization
+                                 obdm(where_ghost,j) = obdm(where_ghost,j) + 1
+                                 !obdm(j,where_ghost) = obdm(j,where_ghost) + 1
+                         end if 
                     end do
-                else
-                    do k = 1,N_at 
-                        !check if there are atms at r_mesh(1)
-                        if (r_at(k) .le. r_mesh(1)) then 
-                                obdm(1,where_ghost) = obdm(1,where_ghost) + 1
-                        else 
-                            do i = 2, where_ghost 
-                            !check for atm(k) at r_mesh(i)
-                            is_at = (r_at(k) .gt. r_mesh(i-1)) .and. (r_at(k) .le. r_mesh(i))
-                            if (is_at .and. (k .ne. where_ghost) ) obdm(i,where_ghost) = obdm(i,where_ghost) + 1
-                            end do
-                        end if
-                    end do
-                end if
+                end do
 
         end function one_walk_radial_obdm_zero_ghost
 

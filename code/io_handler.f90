@@ -79,13 +79,14 @@
       subroutine read_data_dmc(N_at, N_walk, N_max, eq_it, samples, &
                                dt_sam, dt, Er, a, b0, b1, &
                                coords_input_file, eq_out_file, &
-                               Nl, r_max)
+                               Nl, r_min, r_max)
           integer(kind=8) :: N_at, N_walk, N_max
           integer(kind=8) :: eq_it, samples, dt_sam
           real(kind=8) :: dt, Er
           real(kind=8) :: a, b0, b1
           character(len=50) :: coords_input_file, eq_out_file
           integer(kind=8) :: Nl !number of points on the meshgrid
+          real(kind=8) :: r_min
           real(kind=8) :: r_max !Maximum radius where to look for OBDM 
 
           open(unit=io_unit, file=input_file, action='Read')
@@ -122,6 +123,7 @@
               !function
               read(io_unit,*)
               read(io_unit,'(10x,i10)') Nl
+              read(io_unit,'(10x,f15.10)') r_min
               read(io_unit,'(10x,f15.10)') r_max
               read(io_unit,*)
 

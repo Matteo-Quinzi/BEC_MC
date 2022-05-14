@@ -28,6 +28,7 @@ program DMC_omp
       real(kind=8)    :: a, b0, b1                !Scattering length and params of the guiding function
       character(len=50) :: coords_input_file, eq_out_file
       integer(kind=8) :: Nl ! # of points where to evaluate the radial density and density matrix
+      real(kind=8) :: r_min 
       real(kind=8) :: r_max !Maximum radius where to look for the OBDM
       real(kind=8), allocatable :: acc_prob(:)            !Overall acc prob for VMC set up
       real(kind=8), allocatable :: configurations(:,:,:)  !Atoms configurations
@@ -83,7 +84,7 @@ program DMC_omp
       real(kind=8) :: tic, toc
 
       !Loops indexes
-      integer(kind=8) :: i, j, it
+      integer(kind=8) :: i, j, it, k
 
       pi_greek = acos(-1.d0)
       !INITIALIZING RNG
@@ -106,7 +107,7 @@ program DMC_omp
       !Reading input data
       call read_data_dmc(N_at, N_walk, N_max, eq_it, samples, &
                      dt_sam, dt, Er, a, b0, b1, coords_input_file, eq_out_file,&
-                     Nl, r_max)
+                     Nl, r_min, r_max)
       !Sanity check
       if (N_walk > N_max) then
           write(*,*) 'ERROR : N_walk can not be greater than N_max !!!'
@@ -129,6 +130,7 @@ program DMC_omp
       write(*,'(a27,a50)')       'Coordinates input file   : ', coords_input_file
       write(*,'(a27,a50)')       'Equilibration output file: ', eq_out_file
       write(*,'(a27,i10)')       'Meshgrid-side points     : ', Nl
+      write(*,'(a27,f15.10)')    'Minimum radius for OBDM  : ', r_min
       write(*,'(a27,f15.10)')    'Maximum radius for OBDM  : ', r_max
 
       !ALLOCATING CONFIGURATIONS ARRAYS
@@ -268,7 +270,6 @@ program DMC_omp
       allocate(obdm_lzero(Nl, Nl))
 
       !Initializing mesh and rho
-      !r_mesh = define_mesh(Nl, r_max)
       rho_rad = 0.d0  
       obdm_lzero = 0.d0
 
@@ -301,7 +302,7 @@ program DMC_omp
           if ( mod(it,dt_sam) .eq. 0) then
                   !$OMP PARALLEL DO private(r_mesh, r_at)
                   do i = 1,N_walk
-                      r_mesh = define_mesh(Nl, r_max)
+                      r_mesh = define_mesh(Nl, r_min, r_max)
                       r_at = evaluate_atomic_distances(N_at, configurations(i,:,:))
                       rho_rad_walk(i,:) =  one_walk_radial_distribution(N_at, r_at, Nl, r_mesh)
                       obdm_walk(i,:,:) = one_walk_radial_obdm_zero(N_at, r_at, Nl, r_mesh)
@@ -320,17 +321,17 @@ program DMC_omp
       end do
 
       !Evaluate public mesh_grid
-      r_mesh = define_mesh(Nl, r_max)
+      r_mesh = define_mesh(Nl, r_min, r_max)
 
       toc = omp_get_wtime()
 
       rho_rad = rho_rad/(N_at*samples*1.d0)
-      obdm_lzero = obdm_lzero/(N_at*samples*1.d0) 
+      obdm_lzero = obdm_lzero/(N_at*samples*1.d0)
 
-      !Regularize the OBDM 
+      !Regularize the OBDM
       do i = 1, Nl-1
           do j = i+1, Nl
-              obdm_lzero(i,j) =  obdm_lzero(i,j) / (4.d0*pi_greek*r_mesh(i)*r_mesh(j))
+             obdm_lzero(i,j) =  obdm_lzero(i,j) / (4.d0*pi_greek*r_mesh(i)*r_mesh(j))
           end do
       end do
 
@@ -338,7 +339,6 @@ program DMC_omp
       do i=1,Nl
        check_sum = check_sum + obdm_lzero(i,i)
       end do
-
 
       !DIAGNOSTIC PRINTOUT
       write(*,*) '--------------------------------------'
@@ -380,16 +380,20 @@ program DMC_omp
       end do
 
       !Redefining obdm to have larger eigenvalues becoming smaller eigenvalues
-      !obdm_lzero = identity_mat - obdm_lzero
-      write(*,*) (obdm_lzero(i,i), i=1,Nl)
+      obdm_lzero = identity_mat - obdm_lzero
+      !write(*,*) (obdm_lzero(i,i), i=1,Nl)
 
       tic = omp_get_wtime()
-      call dsyevx('V', 'A', 'U', Nl, obdm_lzero, Nl, &
-                  0.d0, 1.d0, 1, 10, 1.d-10, M, &
-                  occupation_numbers, z, ldz, work, lwork, iwork, ifail, info)
+      !call dsyevx('V', 'I', 'U', Nl, obdm_lzero, Nl, &
+      !            0.5d0, 1.d0, 1, 10, 1.d-10, M, &
+      !            occupation_numbers, z, ldz, work, lwork, iwork, ifail, info)
+
+      call dsyev('V', 'U', Nl, obdm_lzero, Nl, &
+                 occupation_numbers, work, lwork, info)
+      M = Nl
       toc = omp_get_wtime()
 
-      !occupation_numbers = 1.d0 - occupation_numbers
+      occupation_numbers = 1.d0 - occupation_numbers
       occupation_numbers(M:Nl) = 0.d0
 
       !DIAGNOSTIC PRINTOUT
@@ -400,10 +404,12 @@ program DMC_omp
       write(*,*) 'Largest eigenvalue found : ', maxval(occupation_numbers(:))
       write(*,*) 'Saving eigenvalues and eigenvectors of the OBDM in eigenvec.out'
       write(*,*) 'Summing eigenvalues :', sum(occupation_numbers(1:M))
-
       write(*,*) 'Index of maximum eigenvalue : ' , maxloc(occupation_numbers(:))
-      eigen_out_file = 'eigenvec.out'
-      !call save_eigenvectors(Nl, 1, r_mesh, obdm_lzero(:,maxloc(occupation_numbers(:))), eigen_out_file)
+
+      do i = 1,M
+      write(*,*) occupation_numbers(i)
+      end do
+
       call save_rho_rad(Nl, r_mesh, rho_rad, obdm_lzero(:,maxloc(occupation_numbers))) 
 
       deallocate(obdm_walk, obdm_lzero)
