@@ -422,7 +422,9 @@ module bec_dmc
                     end do
                 end do
 
-                obdm = obdm/2
+                do i = 1,Nl
+                    obdm(i,i) = int(sqrt(1.d0*obdm(i,i)))
+                end do
 
                 !Sanity check
                 check_sum = 0
@@ -434,5 +436,52 @@ module bec_dmc
                 end if
 
         end function one_walk_radial_obdm_zero
+!-----------------------------------------------------------------------------------------------------------------------------------
+      
+        function one_walk_radial_obdm_zero_ghost(N_at, r_at, Nl, r_mesh) result (obdm)
+                !This evaluates the OBDM using the ghost particle insertion method
+                integer(kind=8), intent(in) :: N_at, Nl
+                real(kind=8), intent(in) :: r_at(N_at), r_mesh(Nl)
+                integer(kind=8) :: obdm(Nl, Nl)
+                real(kind=8) :: r_ghost
+                integer(kind=8) :: i,j,k, where_ghost
+                logical :: is_ghost, is_at
+
+                obdm = 0
+
+                !Extract a ghost particle
+                call random_number(r_ghost)
+                r_ghost= r_ghost*r_mesh(Nl)
+
+                ! Find where the ghost is on the mesh
+                if (r_ghost .le. r_mesh(1)) then
+                        where_ghost = 1
+                else
+                    do i = 2,Nl
+                        if (( r_ghost .gt. r_mesh(i-1) ) .and. ( r_ghost .le. r_mesh(i) ) ) then
+                                where_ghost = i
+                        end if
+                    end do
+                end if
+
+
+                !case i=j=1
+                if (where_ghost .eq. 1) then
+                    do k = 1,N_at
+                        is_at = (r_at(k) .le. r_mesh(1))
+                        if (is_at) obdm(1,1) = obdm(1,1) + 1
+                    end do
+                else
+                    do i = 2, where_ghost 
+                        do k = 1,N_at
+                            !check for atm(k) at r_mesh(i)
+                            is_at = (r_at(k) .gt. r_mesh(i-1)) .and. (r_at(k) .le. r_mesh(i))
+                            if (is_at) obdm(i,where_ghost) = obdm(i,where_ghost) + 1
+                        end do
+                    end do
+                end if
+
+        end function one_walk_radial_obdm_zero_ghost
+
 !-----------------------------------------------------------------------------------------------------------------------------------
 end module bec_dmc

@@ -230,15 +230,17 @@
 
 !--------------------------------------------------------------------------------------------------------------------------
 
-      subroutine save_rho_rad(Nl, r_mesh, rho_rad)
+      subroutine save_rho_rad(Nl, r_mesh, rho_rad, eigenvec)
               integer(kind=8), intent(in) :: Nl
               real(kind=8), intent(in) :: r_mesh(Nl), rho_rad(Nl)
+              real(kind=8), intent(in) :: eigenvec(Nl)
               integer:: i
 
               open(unit=io_unit, file=output_file, action='Write')
               write(io_unit,*) 'r                      rho(r)'
               do i = 1,Nl
-              write(io_unit,'(f15.10,4x,f15.10)') r_mesh(i), rho_rad(i)
+              write(io_unit,'(f15.10,4x,f15.10,4x,f15.10)') r_mesh(i),&
+                            rho_rad(i), eigenvec(i)
               end do
               close(io_unit)
       end subroutine

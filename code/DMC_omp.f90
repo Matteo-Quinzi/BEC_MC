@@ -70,6 +70,12 @@ program DMC_omp
       integer :: info
       character(len=50) :: eigen_out_file
       real(kind=8) :: check_sum
+      integer(kind=8) :: eigenvec_idx
+      real(kind=8), allocatable :: identity_mat(:,:)
+      real(kind=8) :: r_ghost
+
+      !Pi 
+      real(kind=8) :: pi_greek 
 
 
 
@@ -79,6 +85,7 @@ program DMC_omp
       !Loops indexes
       integer(kind=8) :: i, j, it
 
+      pi_greek = acos(-1.d0)
       !INITIALIZING RNG
       call fix_rng(0)
 
@@ -318,7 +325,14 @@ program DMC_omp
       toc = omp_get_wtime()
 
       rho_rad = rho_rad/(N_at*samples*1.d0)
-      obdm_lzero = obdm_lzero/(N_at*samples*1.d0)
+      obdm_lzero = obdm_lzero/(N_at*samples*1.d0) 
+
+      !Regularize the OBDM 
+      do i = 1, Nl-1
+          do j = i+1, Nl
+              obdm_lzero(i,j) =  obdm_lzero(i,j) / (4.d0*pi_greek*r_mesh(i)*r_mesh(j))
+          end do
+      end do
 
       check_sum = 0.d0
       do i=1,Nl
@@ -333,7 +347,7 @@ program DMC_omp
       write(*,*) 'Saving radial distribution function in the out file'
       write(*,*) 'Radial distribution sums to : ',  sum(rho_rad)
       write(*,*) 'Check sum                   : ', check_sum
-      call save_rho_rad(Nl, r_mesh, rho_rad)
+      !call save_rho_rad(Nl, r_mesh, rho_rad)
       write(*,*)
       write(*,*)
 
@@ -351,6 +365,7 @@ program DMC_omp
       !iwork(5*Nl)
       !ifail(N)
       !info
+      allocate(identity_mat(Nl, Nl))
       allocate(occupation_numbers(Nl))
       ldz = Nl
       allocate(z(ldz,Nl))
@@ -359,13 +374,22 @@ program DMC_omp
       allocate(iwork(5*Nl))
       allocate(ifail(Nl))
 
+      identity_mat = 0.d0
+      do i = 1,Nl
+          identity_mat(i,i) = 1.d0
+      end do
+
+      !Redefining obdm to have larger eigenvalues becoming smaller eigenvalues
+      !obdm_lzero = identity_mat - obdm_lzero
+      write(*,*) (obdm_lzero(i,i), i=1,Nl)
+
       tic = omp_get_wtime()
-      call dsyevx('V', 'I', 'U', Nl, obdm_lzero, Nl, &
-                  0.d0, 1.d0, 1, 10, 1.d-5, M, &
+      call dsyevx('V', 'A', 'U', Nl, obdm_lzero, Nl, &
+                  0.d0, 1.d0, 1, 10, 1.d-10, M, &
                   occupation_numbers, z, ldz, work, lwork, iwork, ifail, info)
       toc = omp_get_wtime()
 
-      occupation_numbers = 1.d0 - occupation_numbers
+      !occupation_numbers = 1.d0 - occupation_numbers
       occupation_numbers(M:Nl) = 0.d0
 
       !DIAGNOSTIC PRINTOUT
@@ -377,9 +401,10 @@ program DMC_omp
       write(*,*) 'Saving eigenvalues and eigenvectors of the OBDM in eigenvec.out'
       write(*,*) 'Summing eigenvalues :', sum(occupation_numbers(1:M))
 
+      write(*,*) 'Index of maximum eigenvalue : ' , maxloc(occupation_numbers(:))
       eigen_out_file = 'eigenvec.out'
-      call save_eigenvectors(Nl, 1, r_mesh, obdm_lzero(:,1), eigen_out_file) 
-
+      !call save_eigenvectors(Nl, 1, r_mesh, obdm_lzero(:,maxloc(occupation_numbers(:))), eigen_out_file)
+      call save_rho_rad(Nl, r_mesh, rho_rad, obdm_lzero(:,maxloc(occupation_numbers))) 
 
       deallocate(obdm_walk, obdm_lzero)
       deallocate(walk_en, walk_en_old)
