@@ -5,8 +5,8 @@ N_max   = 1000
 
 #Number of eq.steps / samplings / delta_t between samplings / timestep
 eq_it   = 1000
-samples = 200
-dt_sam  = 100
+samples = 200000
+dt_sam  = 1
 dt      = 0.001
 Er      = 5.6883113
 

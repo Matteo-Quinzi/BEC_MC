@@ -1,8 +1,8 @@
  
  
  DMC run started :
- Date : 2022/05/12
- Time : 14:23:57
+ Date : 2022/05/14
+ Time : 12:32:19
  
  
  ------------------------------------
@@ -10,261 +10,15 @@
  DMC.in                                                                         
   
  Output will be saved in : 
- DMC.out                                                                        
-  
- 
-Number of atoms          :             10
-Number of walkers        :           1000
-Max num of walkers       :           5000
-Number of eq. iterations :          10000
-Number of samples        :          10000
-Steps between two samples:             10
-Timestep                 :        0.0010000000
-Energy scale             :        5.6883113000
-Scattering length        :        0.0043300000
-Guiding func. param b0   :        0.4740000000
-Guiding func. param b1   :        0.0014000000
-Coordinates input file   : final_coords.txt                                  
-Equilibration output file: equilibration.out                                 
-Meshgrid-side points     :       1000
-Maximum radius for OBDM  :    2.5000000000
- 
- -----------------------------------------------
- Initial Distribution setted 
- CPU time :    1.11361408233643     
- Typical acceptance ratio :   0.516051300000000     
- 
- 
-forrtl: severe (174): SIGSEGV, segmentation fault occurred
-Image              PC                Routine            Line        Source             
-DMC_omp.x          000000000041F00A  Unknown               Unknown  Unknown
-libpthread-2.31.s  00007F16CB4CD3C0  Unknown               Unknown  Unknown
-DMC_omp.x          00000000004077BE  Unknown               Unknown  Unknown
-DMC_omp.x          0000000000411596  Unknown               Unknown  Unknown
-DMC_omp.x          00000000004039A2  Unknown               Unknown  Unknown
-libc-2.31.so       00007F16CB2EB0B3  __libc_start_main     Unknown  Unknown
-DMC_omp.x          00000000004038AE  Unknown               Unknown  Unknown
- 
- 
- DMC run started :
- Date : 2022/05/12
- Time : 17:46:55
- 
- 
- ------------------------------------
- Reading : 
- DMC.in                                                                         
-  
- Output will be saved in : 
- DMC.out                                                                        
-  
- 
-Number of atoms          :            128
-Number of walkers        :           1000
-Max num of walkers       :           5000
-Number of eq. iterations :          10000
-Number of samples        :          10000
-Steps between two samples:            100
-Timestep                 :        0.0010000000
-Energy scale             :        5.6883113000
-Scattering length        :        0.0043300000
-Guiding func. param b0   :        0.4740000000
-Guiding func. param b1   :        0.0014000000
-Coordinates input file   : final_coords.txt                                  
-Equilibration output file: equilibration.out                                 
-Meshgrid-side points     :       1000
-Maximum radius for OBDM  :    2.5000000000
-forrtl: error (69): process interrupted (SIGINT)
-Image              PC                Routine            Line        Source             
-DMC_omp.x          0000000000420A7B  Unknown               Unknown  Unknown
-libpthread-2.31.s  00007FE2099913C0  Unknown               Unknown  Unknown
-DMC_omp.x          000000000040E144  Unknown               Unknown  Unknown
-DMC_omp.x          000000000040F5C4  Unknown               Unknown  Unknown
-DMC_omp.x          0000000000417444  Unknown               Unknown  Unknown
-libiomp5.so        00007FE209AF7893  __kmp_invoke_micr     Unknown  Unknown
-libiomp5.so        00007FE209A6ACB3  Unknown               Unknown  Unknown
-libiomp5.so        00007FE209A6BF7D  __kmp_fork_call       Unknown  Unknown
-libiomp5.so        00007FE209A27425  __kmpc_fork_call      Unknown  Unknown
-DMC_omp.x          000000000041111F  Unknown               Unknown  Unknown
-DMC_omp.x          00000000004039E2  Unknown               Unknown  Unknown
-libc-2.31.so       00007FE2097AF0B3  __libc_start_main     Unknown  Unknown
-DMC_omp.x          00000000004038EE  Unknown               Unknown  Unknown
- 
- 
- DMC run started :
- Date : 2022/05/12
- Time : 17:47:22
- 
- 
- ------------------------------------
- Reading : 
- DMC.in                                                                         
-  
- Output will be saved in : 
- DMC.out                                                                        
-  
- 
-Number of atoms          :            128
-Number of walkers        :           1000
-Max num of walkers       :           5000
-Number of eq. iterations :          10000
-Number of samples        :          10000
-Steps between two samples:            100
-Timestep                 :        0.0010000000
-Energy scale             :        5.6883113000
-Scattering length        :        0.0043300000
-Guiding func. param b0   :        0.4740000000
-Guiding func. param b1   :        0.0014000000
-Coordinates input file   : final_coords.txt                                  
-Equilibration output file: equilibration.out                                 
-Meshgrid-side points     :       1000
-Maximum radius for OBDM  :    2.5000000000
- 
- -----------------------------------------------
- Initial Distribution setted 
- CPU time :    105.099443912506     
- Typical acceptance ratio :   0.543708585937500     
- 
- 
-forrtl: severe (174): SIGSEGV, segmentation fault occurred
-Image              PC                Routine            Line        Source             
-DMC_omp.x          0000000000420A4A  Unknown               Unknown  Unknown
-libpthread-2.31.s  00007F4031DCF3C0  Unknown               Unknown  Unknown
-DMC_omp.x          00000000004079DE  Unknown               Unknown  Unknown
-DMC_omp.x          0000000000411F9D  Unknown               Unknown  Unknown
-DMC_omp.x          00000000004039E2  Unknown               Unknown  Unknown
-libc-2.31.so       00007F4031BED0B3  __libc_start_main     Unknown  Unknown
-DMC_omp.x          00000000004038EE  Unknown               Unknown  Unknown
- 
- 
- DMC run started :
- Date : 2022/05/12
- Time : 19:35:28
- 
- 
- ------------------------------------
- Reading : 
- DMC.in                                                                         
-  
- Output will be saved in : 
- DMC.out                                                                        
-  
- 
-Number of atoms          :             10
-Number of walkers        :            100
-Max num of walkers       :            200
-Number of eq. iterations :          10000
-Number of samples        :           1000
-Steps between two samples:            100
-Timestep                 :        0.0010000000
-Energy scale             :        5.6883113000
-Scattering length        :        0.0043300000
-Guiding func. param b0   :        0.4740000000
-Guiding func. param b1   :        0.0014000000
-Coordinates input file   : final_coords.txt                                  
-Equilibration output file: equilibration.out                                 
-Meshgrid-side points     :       1000
-Maximum radius for OBDM  :    2.0000000000
- 
- -----------------------------------------------
- Initial Distribution setted 
- CPU time :   0.220431804656982     
- Typical acceptance ratio :   0.516441000000000     
- 
- 
- --------------------------------------
- Equilibration concluded
- Equilibration time :    7.39847183227539     
- Average equilibration energy   :    1.48335343155709     
- Average acceptance probability :   0.910228056923317     
- Average number of walkers      :    100.235100000000     
- 
- 
- 
- 
- DMC run started :
- Date : 2022/05/12
- Time : 19:37:38
- 
- 
- ------------------------------------
- Reading : 
- DMC.in                                                                         
-  
- Output will be saved in : 
- DMC.out                                                                        
-  
- 
-Number of atoms          :             10
-Number of walkers        :            100
-Max num of walkers       :            200
-Number of eq. iterations :          10000
-Number of samples        :           1000
-Steps between two samples:            100
-Timestep                 :        0.0010000000
-Energy scale             :        5.6883113000
-Scattering length        :        0.0043300000
-Guiding func. param b0   :        0.4740000000
-Guiding func. param b1   :        0.0014000000
-Coordinates input file   : final_coords.txt                                  
-Equilibration output file: equilibration.out                                 
-Meshgrid-side points     :       1000
-Maximum radius for OBDM  :    2.0000000000
- 
- -----------------------------------------------
- Initial Distribution setted 
- CPU time :   0.148589134216309     
- Typical acceptance ratio :   0.517021000000000     
- 
- 
- --------------------------------------
- Equilibration concluded
- Equilibration time :    6.77293705940247     
- Average equilibration energy   :    1.48308736910847     
- Average acceptance probability :   0.910657313150005     
- Average number of walkers      :    99.7210000000000     
- 
- 
- --------------------------------------
- Sampling procedure completed
- Time taken :    1055.89830517769     
- Saving radial distribution function in the out file
- Radial distribution sums to :   0.999698624056726     
- Check sum                   :   0.999698624056726     
- 
- 
- -----------------------------------------
- Diagonalizing the OBDM (l=0)
- 
- Diagonalization completed
- Time in dsyevx :    4.39187502861023     
- Number of eigenvalues found :         1000
- Largest eigenvalue found :   2.662270999540882E-003
- Saving eigenvalues and eigenvectors of the OBDM in eigenvec.out
- Summing eigenvalues :  0.981170672307895     
- Index of maximum eigenvalue :          999
- PROGRAM COMPLETED CORRECTLY
- 
- 
- DMC run started :
- Date : 2022/05/13
- Time : 19:26:47
- 
- 
- ------------------------------------
- Reading : 
- DMC.in                                                                         
-  
- Output will be saved in : 
- DMC_ghost.out                                                                  
+ DMC_no_ghost.out                                                               
   
  
 Number of atoms          :             20
-Number of walkers        :           1000
-Max num of walkers       :           5000
-Number of eq. iterations :          10000
-Number of samples        :          20000
-Steps between two samples:            100
+Number of walkers        :            500
+Max num of walkers       :           1000
+Number of eq. iterations :           1000
+Number of samples        :         200000
+Steps between two samples:              1
 Timestep                 :        0.0010000000
 Energy scale             :        5.6883113000
 Scattering length        :        0.0043300000
@@ -277,51 +31,15 @@ Maximum radius for OBDM  :    2.0000000000
  
  -----------------------------------------------
  Initial Distribution setted 
- CPU time :    3.61642098426819     
- Typical acceptance ratio :   0.518684100000000     
+ CPU time :    1.78209185600281     
+ Typical acceptance ratio :   0.518767600000000     
  
  
  --------------------------------------
  Equilibration concluded
- Equilibration time :    206.921472072601     
- Average equilibration energy   :    1.50657909236993     
- Average acceptance probability :   0.875233748518861     
- Average number of walkers      :    1022.65970000000     
+ Equilibration time :    11.8740730285645     
+ Average equilibration energy   :    1.51296932140263     
+ Average acceptance probability :   0.866599244069816     
+ Average number of walkers      :    569.791000000000     
  
  
- --------------------------------------
- Sampling procedure completed
- Time taken :    39010.0328969955     
- Saving radial distribution function in the out file
- Radial distribution sums to :   0.999644904206060     
- Check sum                   :   2.732238991471934E-003
- 
- 
- -----------------------------------------
- Diagonalizing the OBDM (l=0)
-  0.000000000000000E+000  1.366629901781478E-004  1.634536561841551E-004
-  1.754538151711865E-004  1.799671044922075E-004  1.813839553265209E-004
-  1.774885523623587E-004  1.727109964321656E-004  1.652588740884136E-004
-  1.576053536692890E-004  1.488369835471010E-004  1.382259203155314E-004
-  1.282775614442443E-004  1.178330089386536E-004  1.069114213313395E-004
-  9.631252088284205E-005  8.664984629939251E-005  7.695851696629813E-005
-  6.767240539050877E-005  5.938182603544692E-005  5.143195563560791E-005
-  4.427488618640792E-005  3.768659818040568E-005  3.203868584072686E-005
-  2.695128639233905E-005  0.000000000000000E+000  0.000000000000000E+000
-  0.000000000000000E+000  4.940656458412465E-324  9.881312916824931E-323
-  3.952525166729972E-323  7.905050333459945E-322  4.940656458412465E-324
-  0.000000000000000E+000  4.940656458412465E-324  9.881312916824931E-323
-  3.952525166729972E-323  7.905050333459945E-322  4.940656458412465E-324
-  0.000000000000000E+000  4.940656458412465E-324  2.470328229206233E-322
-  3.952525166729972E-323  1.976262583364986E-321  4.940656458412465E-324
-  0.000000000000000E+000  4.940656458412465E-324  2.470328229206233E-322
-  3.952525166729972E-323  2.810270180643071E-006
- 
- Diagonalization completed
- Time in dsyevx :   1.296997070312500E-003
- Number of eigenvalues found :           50
- Largest eigenvalue found :    733.530920494530     
- Saving eigenvalues and eigenvectors of the OBDM in eigenvec.out
- Summing eigenvalues :  -733.529591770911     
- Index of maximum eigenvalue :           49
- PROGRAM COMPLETED CORRECTLY

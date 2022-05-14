@@ -472,16 +472,68 @@ module bec_dmc
                         if (is_at) obdm(1,1) = obdm(1,1) + 1
                     end do
                 else
-                    do i = 2, where_ghost 
-                        do k = 1,N_at
+                    do k = 1,N_at 
+                        !check if there are atms at r_mesh(1)
+                        if (r_at(k) .le. r_mesh(1)) then 
+                                obdm(1,where_ghost) = obdm(1,where_ghost) + 1
+                        else 
+                            do i = 2, where_ghost 
                             !check for atm(k) at r_mesh(i)
                             is_at = (r_at(k) .gt. r_mesh(i-1)) .and. (r_at(k) .le. r_mesh(i))
-                            if (is_at) obdm(i,where_ghost) = obdm(i,where_ghost) + 1
-                        end do
+                            if (is_at .and. (k .ne. where_ghost) ) obdm(i,where_ghost) = obdm(i,where_ghost) + 1
+                            end do
+                        end if
                     end do
                 end if
 
         end function one_walk_radial_obdm_zero_ghost
+
+!----------------------------------------------------------------------------------------------------------------------------------
+     
+        function one_walk_radial_obdm_zero_ghost_extended(N_at, r_at, Nl, r_mesh) result (obdm)
+                integer(kind=8) :: N_at, Nl
+                real(kind=8) :: r_at(N_at), r_mesh(Nl)
+                integer(kind=8) :: obdm(Nl, Nl)
+                real(kind=8) :: r_ghost(N_at)
+                integer(kind=8) :: i, j, g_idx, a_idx
+                logical :: is_ghost, is_at, is_shift
+
+                obdm = 0
+
+                !Extract array of ghost particles
+                call random_number(r_ghost)
+                r_ghost = r_ghost * r_mesh(Nl)
+
+                !Spanning the whole obdm
+                do i = 1, Nl
+                     do j = 1, Nl
+                         do g_idx = 1, N_at
+                              !Check if the ghost is there
+                              if (i .eq. 1) then
+                                      is_ghost = (r_ghost(g_idx) .le. r_mesh(1))
+                              else
+                                      is_ghost = ((r_ghost(g_idx) .gt. r_mesh(i-1)) .and. (r_ghost(g_idx) .le. r_mesh(i)))
+                              end if
+
+                              do a_idx = 1, N_at
+                                  is_shift = g_idx .ne. a_idx
+                                  !Check if at is there
+                                  if (j .eq. 1) then 
+                                       is_at = (r_at(a_idx) .le. r_mesh(1))
+                                  else
+                                       is_at = (r_at(a_idx) .gt. r_mesh(j-1)) .and. (r_at(a_idx) .le. r_mesh(j))
+                                  end if
+
+                                  if (is_ghost .and. is_at .and. is_shift) then
+                                          obdm(i,j) = obdm(i,j) + 1
+                                          obdm(j,i) = obdm(j,i) + 1
+                                  end if
+                              end do
+                          end do
+                     end do
+                end do
+
+        end function one_walk_radial_obdm_zero_ghost_extended
 
 !-----------------------------------------------------------------------------------------------------------------------------------
 end module bec_dmc
