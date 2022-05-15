@@ -247,7 +247,7 @@ program DMC_omp
       write(*,*)
       write(*,*) 
       
-      !call save_rank_dmc(0, eq_it, Nt, Et, acc_prob_eq, eq_out_file) 
+      call save_rank_dmc(0, eq_it, Nt, Et, acc_prob_eq, eq_out_file) 
 
       deallocate(temp_prob_eq)
       deallocate(Nt, Et, acc_prob_eq)
