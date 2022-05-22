@@ -1,6 +1,7 @@
 module bec_dmc
         !
         use bec_vmc
+        !
         implicit none 
         real(kind=8) :: pi=acos(-1.d0)
         !
@@ -384,7 +385,7 @@ module bec_dmc
                 !Evaluate the radial OBDM associated to angular momentum l=0
                 integer(kind=8), intent(in) :: N_at, Nl
                 real(kind=8), intent(in) :: r_at(N_at), r_mesh(Nl)
-                integer(kind=8) :: obdm(Nl, Nl)
+                real(kind=8) :: obdm(Nl, Nl)
                 integer(kind=8) :: at_1, at_2, i, j
                 logical :: is_at_1, is_at_2, diff_cond
                 integer(kind=8) :: check_sum
@@ -421,9 +422,7 @@ module bec_dmc
                     end do
                 end do
 
-                do i = 1,Nl
-                    obdm(i,i) = int(sqrt(1.d0*obdm(i,i)))
-                end do
+                obdm = sqrt(obdm)
 
                 !Sanity check
                 check_sum = 0
@@ -436,7 +435,8 @@ module bec_dmc
 
         end function one_walk_radial_obdm_zero
 !-----------------------------------------------------------------------------------------------------------------------------------
-      
+!GHOST methods were tried during implementation but lead to meaningless results (divergences for r --> 0)
+
         function one_walk_radial_obdm_zero_ghost(N_at, r_at, Nl, r_mesh) result (obdm)
                 !This evaluates the OBDM using the ghost particle insertion method
                 integer(kind=8), intent(in) :: N_at, Nl

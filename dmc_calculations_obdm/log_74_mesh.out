@@ -1,0 +1,38 @@
+ 
+ 
+ DMC run started :
+ Date : 2022/05/20
+ Time : 08:45:25
+ 
+ 
+ ------------------------------------
+ Reading : 
+ DMC.in                                                                         
+  
+ Output will be saved in : 
+ DMC_74_mesh.out                                                                
+  
+ 
+Number of atoms          :            128
+Number of walkers        :            700
+Max num of walkers       :           1500
+Number of eq. iterations :          20000
+Number of samples        :           3000
+Steps between two samples:             15
+Timestep                 :        0.0001000000
+Energy scale             :        5.6883113000
+Scattering length        :        0.0043300000
+Guiding func. param b0   :        0.4740000000
+Guiding func. param b1   :        0.0014000000
+Coordinates input file   : final_coords.txt                                  
+Equilibration output file: equilibration_try.out                             
+Meshgrid-side points     :         74
+Minimum radius for OBDM  :    0.1000000000
+Maximum radius for OBDM  :    2.5000000000
+ 
+ -----------------------------------------------
+ Initial Distribution setted 
+ CPU time :    49.5797851085663     
+ Typical acceptance ratio :   0.543821529017857     
+ 
+ 

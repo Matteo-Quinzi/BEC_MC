@@ -2,8 +2,8 @@ COMPILER=mpiifort
 OPTIMIZATION=-Ofast
 
 VMC: io_handler.o bec_vmc.o VMC.f90
-	$(COMPILER) io_handler.o bec_vmc.o VMC.f90 -o VMC.x
+	$(COMPILER) $(OPTIMIZATION) io_handler.o bec_vmc.o VMC.f90 -o VMC.x
 io_handler.o: io_handler.f90
-	$(COMPILER) -c io_handler.f90
+	$(COMPILER) $(OPTIMIZATION) -c io_handler.f90
 bec_vmc.o: bec_vmc.f90 
-	$(COMPILER) -c bec_vmc.f90	
+	$(COMPILER) $(OPTIMIZATION) -c bec_vmc.f90	

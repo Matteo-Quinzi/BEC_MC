@@ -1,14 +1,14 @@
 #Number of atoms and walkers and maximum number of walkers
 N_at    = 128
-N_walk  = 500
+N_walk  = 1000
 N_max   = 2000
 
 #Number of eq.steps / samplings / delta_t between samplings / timestep
-eq_it   = 50000
+eq_it   = 20000
 samples = 6000
-dt_sam  = 30
+dt_sam  = 15
 dt      = 0.0001
-Er      = 50.6883113
+Er      = 5.6883113
 
 #Info about the guiding function
 a       = 0.00433
@@ -20,8 +20,7 @@ coords  = final_coords.txt
 eq_out  = equilibration_try.out
 
 #OBDM info
-Nl      = 30
-r_min   = 0.25 
-r_max   = 3.5
-
+Nl      = 50
+r_min   = 0.10 
+r_max   = 2.5
 

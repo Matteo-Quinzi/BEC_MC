@@ -1,0 +1,116 @@
+ 
+ 
+ DMC run started :
+ Date : 2022/05/21
+ Time : 12:24:22
+ 
+ 
+ ------------------------------------
+ Reading : 
+ DMC.in                                                                         
+  
+ Output will be saved in : 
+ DMC_good.out                                                                   
+  
+ 
+Number of atoms          :            128
+Number of walkers        :           1000
+Max num of walkers       :           2000
+Number of eq. iterations :          20000
+Number of samples        :           6000
+Steps between two samples:             15
+Timestep                 :        0.0001000000
+Energy scale             :        5.6883113000
+Scattering length        :        0.0043300000
+Guiding func. param b0   :        0.4740000000
+Guiding func. param b1   :        0.0014000000
+Coordinates input file   : final_coords.txt                                  
+Equilibration output file: equilibration_try.out                             
+Meshgrid-side points     :         50
+Minimum radius for OBDM  :    0.1000000000
+Maximum radius for OBDM  :    2.5000000000
+ 
+ -----------------------------------------------
+ Initial Distribution setted 
+ CPU time :    70.7669889926910     
+ Typical acceptance ratio :   0.543764898437500     
+ 
+ 
+ --------------------------------------
+ Equilibration concluded
+ Equilibration time :    9399.92740488052     
+ Average equilibration energy   :    1.68789420363687     
+ Average acceptance probability :   0.896558804911955     
+ Average number of walkers      :    1001.21980000000     
+ 
+ 
+ --------------------------------------
+ Sampling procedure completed
+ Time taken :    46662.9337909222     
+ Saving radial distribution function in the out file
+ Radial distribution sums to :   0.999990468083995     
+ Check sum                   :   0.999990468083995     
+ Ground state energy         :    1.68681124672849     
+ 
+ 
+ -----------------------------------------
+ Diagonalizing the OBDM (l=0)
+ 
+ Diagonalization completed
+ Time in dsyevx :   8.239746093750000E-004
+ Number of eigenvalues found :           50
+ Largest eigenvalue found :   0.912380107881988     
+ Saving eigenvalues and eigenvectors of the OBDM in eigenvec.out
+ Summing eigenvalues :  0.999983900611832     
+ Index of maximum eigenvalue :            1
+  0.912380107881988     
+  3.219207688291092E-003
+  3.201379103543345E-003
+  3.192991009197677E-003
+  3.111961507983541E-003
+  3.066852701261169E-003
+  3.061281278049721E-003
+  2.933053177934020E-003
+  2.911701498115482E-003
+  2.871916920054840E-003
+  2.710395167604296E-003
+  2.671295495738413E-003
+  2.566585132921073E-003
+  2.530123617093483E-003
+  2.448458781937113E-003
+  2.394430358106825E-003
+  2.329531454382083E-003
+  2.284782615803782E-003
+  2.280946220675428E-003
+  2.210503705642575E-003
+  2.196668649107170E-003
+  2.184629179088460E-003
+  2.157356725182691E-003
+  2.144377242736528E-003
+  2.129415849762450E-003
+  2.113414872789265E-003
+  2.109026533376857E-003
+  2.098151492457290E-003
+  2.093342299035350E-003
+  2.087181026697915E-003
+  2.084232597327151E-003
+  2.062248377290854E-003
+  1.877017828514793E-003
+  1.782321949541199E-003
+  1.415830309287935E-003
+  1.313318862068757E-003
+  1.086176276821949E-003
+  8.101678922429745E-004
+  5.867264680073925E-004
+  4.160606435057446E-004
+  2.897431427604236E-004
+  2.001228398453847E-004
+  1.347167679034422E-004
+  8.762062672007520E-005
+  5.830239029946949E-005
+  3.800403117482087E-005
+  2.426359259044553E-005
+  1.567380958400477E-005
+  1.028301978767132E-005
+  0.000000000000000E+000
+ PROGRAM COMPLETED CORRECTLY
