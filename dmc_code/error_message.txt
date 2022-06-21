@@ -1,5 +1,0 @@
-[proxy:0:0@pascal0] HYD_spawn (../../../../../src/pm/i_hydra/libhydra/spawn/intel/hydra_spawn.c:146): execvp error on file np (No such file or directory)
-[proxy:0:0@pascal0] HYD_spawn (../../../../../src/pm/i_hydra/libhydra/spawn/intel/hydra_spawn.c:146): execvp error on file np (No such file or directory)
-[mpiexec@pascal0] wait_proxies_to_terminate (../../../../../src/pm/i_hydra/mpiexec/intel/i_mpiexec.c:558): downstream from host pascal0 was killed by signal 9 (Killed)
-[mpiexec@pascal0] main (../../../../../src/pm/i_hydra/mpiexec/mpiexec.c:2162): assert (pg->intel.exitcodes != NULL) failed
-[mpiexec@pascal0] HYD_sock_write (../../../../../src/pm/i_hydra/libhydra/sock/hydra_sock_intel.c:362): write error (Bad file descriptor)
