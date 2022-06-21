@@ -1,5 +1,5 @@
 # BEC_MC
-Project for studying BEC in a gas of N bosons trapped within a harmonic potential.
+Project for studying BEC in a gas of N bosons trapped within a harmonic potential.\
 Hard core interaction between particles is considered.
 
 ## How to use this repository
