@@ -5,7 +5,7 @@ Hard core interaction between particles is considered.
 ## How to use this repository
 - `code` contains the source code + some makefile to compile the source using ifort
 - `exec_files` contains the executables already compiled (using `ifort`) + a subdirectory with examples of input/outpuf file and `.log` files showing what the programs give as diagnostic informations
-- Other repositories contain intermediate results (nothing too useful in general, but you can have a look if curious)
+- Other directories contain intermediate results (nothing too useful in general, but you can have a look if curious)
 - `report.pdf` contains a detailed description of what is done
 
 Here follows a description of the input/output files (if needed for their interpretation).
