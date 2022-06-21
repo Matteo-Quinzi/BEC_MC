@@ -54,6 +54,7 @@ program DMC_omp
       !Sampling variables
       integer(kind=8) :: sample_it
       real(kind=8), allocatable :: rho_rad(:), r_at(:), r_mesh(:)
+      real(kind=8) :: dr
       integer(kind=8),allocatable :: rho_rad_walk(:,:)
       real(kind=8) :: mean_Et
       real(kind=8), allocatable :: obdm_walk(:,:,:)    !OBDM  for all walkers (N_max, Nl, Nl)
@@ -74,6 +75,8 @@ program DMC_omp
       integer(kind=8) :: eigenvec_idx
       real(kind=8), allocatable :: identity_mat(:,:)
       real(kind=8) :: r_ghost
+      real(kind=8) :: gs_energy, energy_err
+      real(kind=8), allocatable :: energy_err_array(:)
 
       !Pi 
       real(kind=8) :: pi_greek 
@@ -275,6 +278,7 @@ program DMC_omp
 
       !I also want to evaluate the energy
       allocate(Et(sample_it))
+      allocate(energy_err_array(sample_it))
 
       tic = omp_get_wtime()
       !Diffusion cycle works as before
@@ -339,6 +343,11 @@ program DMC_omp
        check_sum = check_sum + obdm_lzero(i,i)
       end do
 
+      gs_energy = sum(Et)/sample_it
+      energy_err_array(:) = (/ ( sqrt((Et(i) - gs_energy)**2.d0),i=1,sample_it) /)
+      energy_err = sum(energy_err_array)/(sample_it-1)
+      deallocate(energy_err_array)
+
       !DIAGNOSTIC PRINTOUT
       write(*,*) '--------------------------------------'
       write(*,*) 'Sampling procedure completed'
@@ -346,7 +355,8 @@ program DMC_omp
       write(*,*) 'Saving radial distribution function in the out file'
       write(*,*) 'Radial distribution sums to : ',  sum(rho_rad)
       write(*,*) 'Check sum                   : ', check_sum
-      write(*,*) 'Ground state energy         : ', sum(Et)/sample_it
+      write(*,*) 'Ground state energy         : ', gs_energy
+      write(*,*) 'Error on the energy         : ', energy_err
       !call save_rho_rad(Nl, r_mesh, rho_rad)
       write(*,*)
       write(*,*)

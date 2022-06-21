@@ -488,7 +488,7 @@ module bec_dmc
         function one_walk_radial_obdm_zero_ghost_extended(N_at, r_at, Nl, r_mesh) result (obdm)
                 integer(kind=8) :: N_at, Nl
                 real(kind=8) :: r_at(N_at), r_mesh(Nl)
-                integer(kind=8) :: obdm(Nl, Nl)
+                real(kind=8) :: obdm(Nl, Nl)
                 real(kind=8) :: r_ghost(N_at)
                 integer(kind=8) :: i, j, g_idx, a_idx
                 logical :: is_ghost, is_at, is_shift
@@ -527,6 +527,9 @@ module bec_dmc
                           end do
                      end do
                 end do
+
+                obdm = obdm * 0.5d0
+                obdm = sqrt(obdm)
 
         end function one_walk_radial_obdm_zero_ghost_extended
 

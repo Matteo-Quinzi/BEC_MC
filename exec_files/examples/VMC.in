@@ -1,0 +1,21 @@
+#N atoms 
+N = 128
+N = 200
+
+#step per cycle and #cycles
+M = 10
+N = 10
+
+#scattering length 
+a = 0.00433
+
+#variational param b0, b1 
+b = 0.4760
+b = 0.0008
+
+#gas radius
+l = 1.0
+
+#input from file
+from file   = 0
+coords_file = 'none'

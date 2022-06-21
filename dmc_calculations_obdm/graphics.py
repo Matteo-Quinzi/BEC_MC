@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-data = np.genfromtxt('DMC_good.out', skip_header=1)
+data = np.genfromtxt('DMC.out', skip_header=1)
 r = data[:,0]
 rho = data[:,1]
 eigenvec = data[:,2]
@@ -12,8 +12,8 @@ fig, ax = plt.subplots(2,1,figsize=(12,12))
 _ = ax[0].set_ylabel(r'$n(r)$')
 _ = ax[0].set_xlabel(r'$r$')
 
-rho = (rho/r**2.0)
-condensate = (eigenvec/r)**2.0
+rho = (rho/r**2.0)/(4.0*np.pi)
+condensate = (eigenvec/r)**2.0 / (4.0*np.pi)
 
 _ = ax[0].plot(r,rho/dr, label=r'$n_{tot}(r)$', marker='o', lw=0.5, alpha=0.75, color='cadetblue')
 _ = ax[0].plot(r,condensate/dr, label=r'$|\phi_0(r)|^2$', marker='o', lw=0.5, alpha=0.75, color='red')

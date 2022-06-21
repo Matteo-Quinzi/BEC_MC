@@ -1,0 +1,136 @@
+ 
+ 
+ VMC run started.
+ Date : 20220621
+ Time : 181650.732
+ 
+ 
+ ---------------------------------------------------
+ Reading : 
+ VMC.in                                                                         
+  
+ Output will be saved in : 
+ VMC.out                                                                        
+  
+ 
+ 
+Number of processes      :              4
+Number of atoms          :            128
+Number of walkers        :            200
+Number of step per cycle :             10
+Number of cycles         :             10
+Scattering length        :     .00433
+Variational parameter b0 :       0.476000
+Variational parameter b1 :       0.000800
+Max initialization radius:     1.00000
+Reading from file        :     0
+Coords Input file        :     'none'                                            
+ 
+ 
+ ------------------------------------------------------
+ 
+ 
+ Boson gas has been successfully setted up
+ CPU_time in gas creation :   7.200000000000262E-005
+ 
+ 
+ -------------------------------------------
+ 
+Terminated cycle             :             1
+Average value of the energy  :       -42.46902413
+Average error on the energy  :         1.62539072
+Average acceptance ratio     :         0.71750000
+Time spent within this cycle :         0.56765698
+ 
+ 
+ ---------------------------------------------------------------
+ 
+Terminated cycle             :             2
+Average value of the energy  :       -33.73604614
+Average error on the energy  :         1.23922891
+Average acceptance ratio     :         0.70150000
+Time spent within this cycle :         0.57567278
+ 
+ 
+ ---------------------------------------------------------------
+ 
+Terminated cycle             :             3
+Average value of the energy  :       -27.23323070
+Average error on the energy  :         0.78580409
+Average acceptance ratio     :         0.68950000
+Time spent within this cycle :         0.57416030
+ 
+ 
+ ---------------------------------------------------------------
+ 
+Terminated cycle             :             4
+Average value of the energy  :       -22.47578447
+Average error on the energy  :         0.86291579
+Average acceptance ratio     :         0.68250000
+Time spent within this cycle :         0.51401983
+ 
+ 
+ ---------------------------------------------------------------
+ 
+Terminated cycle             :             5
+Average value of the energy  :       -17.55136855
+Average error on the energy  :         0.69910519
+Average acceptance ratio     :         0.65000000
+Time spent within this cycle :         0.46581784
+ 
+ 
+ ---------------------------------------------------------------
+ 
+Terminated cycle             :             6
+Average value of the energy  :       -14.08308817
+Average error on the energy  :         0.49988736
+Average acceptance ratio     :         0.64300000
+Time spent within this cycle :         0.43451086
+ 
+ 
+ ---------------------------------------------------------------
+ 
+Terminated cycle             :             7
+Average value of the energy  :       -11.54122483
+Average error on the energy  :         0.46125565
+Average acceptance ratio     :         0.63550000
+Time spent within this cycle :         0.45102745
+ 
+ 
+ ---------------------------------------------------------------
+ 
+Terminated cycle             :             8
+Average value of the energy  :        -9.02885406
+Average error on the energy  :         0.41811741
+Average acceptance ratio     :         0.61300000
+Time spent within this cycle :         0.42977046
+ 
+ 
+ ---------------------------------------------------------------
+ 
+Terminated cycle             :             9
+Average value of the energy  :        -6.90038325
+Average error on the energy  :         0.36976976
+Average acceptance ratio     :         0.62100000
+Time spent within this cycle :         0.44542272
+ 
+ 
+ ---------------------------------------------------------------
+ 
+Terminated cycle             :            10
+Average value of the energy  :        -5.10747836
+Average error on the energy  :         0.30306066
+Average acceptance ratio     :         0.60750000
+Time spent within this cycle :         0.42241972
+ 
+ 
+ ---------------------------------------------------------------
+ 
+ Program terminated
+!E   :        -5.10747836
+!!err:         0.30306066
+!!a_r:         0.60750000
+Time spent within the whole program :            4.88901
+ 
+ 
+ ---------------------------------------------------------------
